@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import blazeLogo from "@/assets/blaze-logo.png";
 
 interface SidebarProps {
   userId: string | undefined;
@@ -25,8 +26,9 @@ const Sidebar = ({ userId }: SidebarProps) => {
 
   return (
     <aside className="w-64 border-r border-border bg-card h-screen sticky top-0 flex flex-col">
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-primary">SocialHub</h1>
+      <div className="p-6 flex items-center gap-3">
+        <img src={blazeLogo} alt="Blaze" className="h-12 w-12" />
+        <h1 className="text-2xl font-bold text-primary">Blaze</h1>
       </div>
       
       <nav className="flex-1 px-4 space-y-2">

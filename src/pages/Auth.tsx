@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import blazeLogo from "@/assets/blaze-logo.png";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-        toast.success("Account created! Welcome to SocialHub!");
+        toast.success("Account created! Welcome to Blaze!");
         navigate("/");
       }
     } catch (error: any) {
@@ -66,9 +67,12 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
+        <CardHeader className="space-y-3">
+          <div className="flex justify-center">
+            <img src={blazeLogo} alt="Blaze" className="h-16 w-16" />
+          </div>
           <CardTitle className="text-3xl font-bold text-center">
-            {isLogin ? "Welcome back" : "Create an account"}
+            {isLogin ? "Welcome back to Blaze" : "Join Blaze"}
           </CardTitle>
           <CardDescription className="text-center">
             {isLogin
