@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, MapPin, Link as LinkIcon, Calendar, ArrowLeft } from "lucide-react";
 import Post from "@/components/Post";
+import EditProfileDialog from "@/components/EditProfileDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -30,6 +31,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -83,16 +85,29 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => navigate("/")}
-        className="mb-4"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Home
-      </Button>
+    <>
+      {profile && (
+        <EditProfileDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          profile={profile}
+          onProfileUpdated={() => {
+            fetchProfile();
+            fetchUserPosts();
+          }}
+        />
+      )}
+      
+      <div className="max-w-2xl mx-auto">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/")}
+          className="mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Home
+        </Button>
 
       <div className="bg-card rounded-lg overflow-hidden">
         <div
@@ -113,7 +128,9 @@ const Profile = ({ currentUserId }: ProfileProps) => {
               </AvatarFallback>
             </Avatar>
             {currentUserId === userId && (
-              <Button variant="outline">Edit Profile</Button>
+              <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
+                Edit Profile
+              </Button>
             )}
           </div>
 
@@ -165,6 +182,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
         )}
       </div>
     </div>
+    </>
   );
 };
 
