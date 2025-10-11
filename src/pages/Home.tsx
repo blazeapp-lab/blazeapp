@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Post from "@/components/Post";
 import CreatePost from "@/components/CreatePost";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 interface HomeProps {
-  currentUserId: string;
+  currentUserId: string | undefined;
 }
 
 const Home = ({ currentUserId }: HomeProps) => {
@@ -52,9 +53,14 @@ const Home = ({ currentUserId }: HomeProps) => {
     <div className="max-w-2xl mx-auto space-y-4">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Home</h1>
+        {!currentUserId && (
+          <Button onClick={() => window.location.href = '/auth'}>
+            Sign in to post
+          </Button>
+        )}
       </div>
       
-      <CreatePost userId={currentUserId} onPostCreated={fetchPosts} />
+      {currentUserId && <CreatePost userId={currentUserId} onPostCreated={fetchPosts} />}
       
       {posts.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
@@ -62,7 +68,7 @@ const Home = ({ currentUserId }: HomeProps) => {
         </div>
       ) : (
         posts.map((post) => (
-          <Post key={post.id} post={post} currentUserId={currentUserId} />
+          <Post key={post.id} post={post} currentUserId={currentUserId} onPostDeleted={fetchPosts} />
         ))
       )}
     </div>

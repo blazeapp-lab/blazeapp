@@ -22,7 +22,7 @@ interface Profile {
 }
 
 interface ProfileProps {
-  currentUserId: string;
+  currentUserId: string | undefined;
 }
 
 const Profile = ({ currentUserId }: ProfileProps) => {
@@ -176,9 +176,9 @@ const Profile = ({ currentUserId }: ProfileProps) => {
         {posts.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">No posts yet</p>
         ) : (
-          posts.map((post) => (
-            <Post key={post.id} post={post} currentUserId={currentUserId} />
-          ))
+        posts.map((post) => (
+          <Post key={post.id} post={post} currentUserId={currentUserId} onPostDeleted={fetchUserPosts} />
+        ))
         )}
       </div>
     </div>

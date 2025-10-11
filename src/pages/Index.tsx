@@ -16,20 +16,12 @@ const Index = () => {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
-        if (!session) {
-          navigate("/auth");
-        }
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
-      if (!session) {
-        navigate("/auth");
-      }
       setLoading(false);
     });
 
@@ -44,15 +36,11 @@ const Index = () => {
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar userId={user.id} />
+      {user && <Sidebar userId={user.id} />}
       <main className="flex-1 p-6">
-        <Home currentUserId={user.id} />
+        <Home currentUserId={user?.id} />
       </main>
     </div>
   );
