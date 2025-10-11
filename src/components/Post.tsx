@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, User, Trash2, Edit } from "lucide-react";
+import { Heart, MessageCircle, User, Trash2, Edit, HeartCrack } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -33,6 +33,7 @@ interface PostProps {
     image_url: string | null;
     likes_count: number;
     comments_count: number;
+    broken_hearts_count: number;
     created_at: string;
     user_id: string;
     profiles: {
@@ -50,6 +51,8 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes_count);
+  const [isBrokenHearted, setIsBrokenHearted] = useState(false);
+  const [brokenHeartsCount, setBrokenHeartsCount] = useState(post.broken_hearts_count);
   const [showComments, setShowComments] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -59,6 +62,7 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
   useEffect(() => {
     if (currentUserId) {
       checkIfLiked();
+      checkIfBrokenHearted();
     }
   }, [post.id, currentUserId]);
 
@@ -71,6 +75,17 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
       .eq("user_id", currentUserId)
       .maybeSingle();
     setIsLiked(!!data);
+  };
+
+  const checkIfBrokenHearted = async () => {
+    if (!currentUserId) return;
+    const { data } = await supabase
+      .from("broken_hearts")
+      .select("id")
+      .eq("post_id", post.id)
+      .eq("user_id", currentUserId)
+      .maybeSingle();
+    setIsBrokenHearted(!!data);
   };
 
   const handleLike = async () => {
@@ -140,6 +155,34 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
       toast.error("Failed to update post");
     } finally {
       setIsEditing(false);
+    }
+  };
+
+  const handleBrokenHeart = async () => {
+    if (!currentUserId) {
+      toast.error("Please sign in to react to posts");
+      navigate("/auth");
+      return;
+    }
+    try {
+      if (isBrokenHearted) {
+        await supabase
+          .from("broken_hearts")
+          .delete()
+          .eq("post_id", post.id)
+          .eq("user_id", currentUserId);
+        setBrokenHeartsCount((prev) => prev - 1);
+        setIsBrokenHearted(false);
+      } else {
+        await supabase.from("broken_hearts").insert({
+          post_id: post.id,
+          user_id: currentUserId,
+        });
+        setBrokenHeartsCount((prev) => prev + 1);
+        setIsBrokenHearted(true);
+      }
+    } catch (error: any) {
+      toast.error("Failed to update reaction");
     }
   };
 
@@ -224,6 +267,17 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
               className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
             />
             <span>{likesCount}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2"
+            onClick={handleBrokenHeart}
+          >
+            <HeartCrack
+              className={`h-5 w-5 ${isBrokenHearted ? "fill-blue-500 text-blue-500" : ""}`}
+            />
+            <span>{brokenHeartsCount}</span>
           </Button>
           <Button
             variant="ghost"

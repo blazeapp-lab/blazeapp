@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      broken_hearts: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broken_hearts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           content: string
@@ -56,6 +85,27 @@ export type Database = {
           },
         ]
       }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           created_at: string
@@ -94,6 +144,7 @@ export type Database = {
       }
       posts: {
         Row: {
+          broken_hearts_count: number
           comments_count: number
           content: string
           created_at: string
@@ -104,6 +155,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          broken_hearts_count?: number
           comments_count?: number
           content: string
           created_at?: string
@@ -114,6 +166,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          broken_hearts_count?: number
           comments_count?: number
           content?: string
           created_at?: string

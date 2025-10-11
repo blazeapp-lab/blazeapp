@@ -32,13 +32,17 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   useEffect(() => {
     if (userId) {
       fetchProfile();
       fetchUserPosts();
+      fetchFollowData();
     }
-  }, [userId]);
+  }, [userId, currentUserId]);
 
   const fetchProfile = async () => {
     try {
@@ -78,6 +82,68 @@ const Profile = ({ currentUserId }: ProfileProps) => {
       return;
     }
     setPosts(data || []);
+  };
+
+  const fetchFollowData = async () => {
+    if (!userId) return;
+
+    // Get follower count
+    const { count: followers } = await supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("following_id", userId);
+
+    // Get following count
+    const { count: following } = await supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("follower_id", userId);
+
+    setFollowerCount(followers || 0);
+    setFollowingCount(following || 0);
+
+    // Check if current user is following this profile
+    if (currentUserId && currentUserId !== userId) {
+      const { data } = await supabase
+        .from("follows")
+        .select("id")
+        .eq("follower_id", currentUserId)
+        .eq("following_id", userId)
+        .maybeSingle();
+      
+      setIsFollowing(!!data);
+    }
+  };
+
+  const handleFollow = async () => {
+    if (!currentUserId) {
+      toast.error("Please sign in to follow users");
+      navigate("/auth");
+      return;
+    }
+
+    try {
+      if (isFollowing) {
+        await supabase
+          .from("follows")
+          .delete()
+          .eq("follower_id", currentUserId)
+          .eq("following_id", userId);
+        setIsFollowing(false);
+        setFollowerCount((prev) => prev - 1);
+      } else {
+        await supabase
+          .from("follows")
+          .insert({
+            follower_id: currentUserId,
+            following_id: userId,
+          });
+        setIsFollowing(true);
+        setFollowerCount((prev) => prev + 1);
+      }
+    } catch (error: any) {
+      toast.error("Failed to update follow status");
+    }
   };
 
   if (loading || !profile) {
@@ -127,11 +193,18 @@ const Profile = ({ currentUserId }: ProfileProps) => {
                 <User />
               </AvatarFallback>
             </Avatar>
-            {currentUserId === userId && (
+            {currentUserId === userId ? (
               <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
                 Edit Profile
               </Button>
-            )}
+            ) : currentUserId ? (
+              <Button 
+                variant={isFollowing ? "outline" : "default"} 
+                onClick={handleFollow}
+              >
+                {isFollowing ? "Unfollow" : "Follow"}
+              </Button>
+            ) : null}
           </div>
 
           <div className="space-y-3">
@@ -143,6 +216,17 @@ const Profile = ({ currentUserId }: ProfileProps) => {
             </div>
 
             {profile.bio && <p className="text-sm">{profile.bio}</p>}
+
+            <div className="flex gap-4 text-sm">
+              <div className="flex items-center gap-1">
+                <span className="font-semibold text-foreground">{followerCount}</span>
+                <span className="text-muted-foreground">Followers</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="font-semibold text-foreground">{followingCount}</span>
+                <span className="text-muted-foreground">Following</span>
+              </div>
+            </div>
 
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               {profile.location && (
