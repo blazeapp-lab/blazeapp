@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, User, Trash2, Edit, HeartCrack } from "lucide-react";
+import { Heart, MessageCircle, User, Trash2, Edit, ThumbsDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -274,7 +274,7 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
             className="gap-2"
             onClick={handleBrokenHeart}
           >
-            <HeartCrack
+            <ThumbsDown
               className={`h-5 w-5 ${isBrokenHearted ? "fill-blue-500 text-blue-500" : ""}`}
             />
             <span>{brokenHeartsCount}</span>

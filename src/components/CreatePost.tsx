@@ -5,6 +5,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Image } from "lucide-react";
+import { z } from "zod";
+
+const postSchema = z.object({
+  content: z.string().trim().min(1, { message: "Post content cannot be empty" }).max(5000, { message: "Post is too long (max 5000 characters)" }),
+  imageUrl: z.string().trim().url({ message: "Invalid image URL" }).max(2000, { message: "URL too long" }).optional().or(z.literal("")),
+});
 
 interface CreatePostProps {
   userId: string;
@@ -19,17 +25,14 @@ const CreatePost = ({ userId, onPostCreated }: CreatePostProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim()) {
-      toast.error("Post content cannot be empty");
-      return;
-    }
 
     setLoading(true);
     try {
+      const validatedData = postSchema.parse({ content, imageUrl });
       const { error } = await supabase.from("posts").insert({
         user_id: userId,
-        content: content.trim(),
-        image_url: imageUrl.trim() || null,
+        content: validatedData.content,
+        image_url: validatedData.imageUrl || null,
       });
 
       if (error) throw error;
@@ -40,7 +43,11 @@ const CreatePost = ({ userId, onPostCreated }: CreatePostProps) => {
       setOpen(false);
       onPostCreated();
     } catch (error: any) {
-      toast.error(error.message || "Failed to create post");
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message || "Failed to create post");
+      }
     } finally {
       setLoading(false);
     }

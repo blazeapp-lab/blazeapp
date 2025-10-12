@@ -7,6 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().trim().email({ message: "Invalid email address" }).max(255, { message: "Email too long" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(72, { message: "Password too long" }),
+});
+
+const signupSchema = loginSchema.extend({
+  username: z.string().trim().min(3, { message: "Username must be at least 3 characters" }).max(30, { message: "Username too long" }).regex(/^[a-zA-Z0-9_]+$/, { message: "Username can only contain letters, numbers, and underscores" }),
+  displayName: z.string().trim().min(1, { message: "Display name is required" }).max(50, { message: "Display name too long" }),
+});
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -33,22 +44,24 @@ const Auth = () => {
 
     try {
       if (isLogin) {
+        const validatedData = loginSchema.parse({ email, password });
         const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: validatedData.email,
+          password: validatedData.password,
         });
         if (error) throw error;
         toast.success("Welcome back!");
         navigate("/");
       } else {
+        const validatedData = signupSchema.parse({ email, password, username, displayName });
         const { error } = await supabase.auth.signUp({
-          email,
-          password,
+          email: validatedData.email,
+          password: validatedData.password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
             data: {
-              username,
-              display_name: displayName,
+              username: validatedData.username,
+              display_name: validatedData.displayName,
             },
           },
         });
@@ -57,7 +70,11 @@ const Auth = () => {
         navigate("/");
       }
     } catch (error: any) {
-      toast.error(error.message || "An error occurred");
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message || "An error occurred");
+      }
     } finally {
       setLoading(false);
     }

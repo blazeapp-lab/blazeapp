@@ -6,6 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, User } from "lucide-react";
+import { z } from "zod";
+
+const commentSchema = z.object({
+  content: z.string().trim().min(1, { message: "Comment cannot be empty" }).max(2000, { message: "Comment is too long (max 2000 characters)" }),
+});
 
 interface Comment {
   id: string;
@@ -57,14 +62,14 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
 
     setLoading(true);
     try {
+      const validatedData = commentSchema.parse({ content: newComment });
       const { error } = await supabase.from("comments").insert({
         post_id: postId,
         user_id: currentUserId,
-        content: newComment.trim(),
+        content: validatedData.content,
       });
 
       if (error) throw error;
@@ -72,7 +77,11 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
       setNewComment("");
       await fetchComments();
     } catch (error: any) {
-      toast.error("Failed to post comment");
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error("Failed to post comment");
+      }
     } finally {
       setLoading(false);
     }

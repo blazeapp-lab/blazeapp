@@ -7,6 +7,38 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Upload } from "lucide-react";
+import { z } from "zod";
+
+const profileSchema = z.object({
+  displayName: z.string().trim().max(50, { message: "Display name too long" }).optional(),
+  bio: z.string().trim().max(500, { message: "Bio too long (max 500 characters)" }).optional(),
+  website: z.string().trim().url({ message: "Invalid website URL" }).max(200, { message: "URL too long" }).optional().or(z.literal("")),
+  location: z.string().trim().max(100, { message: "Location too long" }).optional(),
+});
+
+const validateImageFile = async (file: File): Promise<boolean> => {
+  const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  
+  // Check MIME type
+  if (!validTypes.includes(file.type)) {
+    return false;
+  }
+  
+  // Check file signature (magic bytes)
+  const buffer = await file.slice(0, 4).arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  // Check for common image file signatures
+  const signatures = {
+    'ffd8ff': 'jpeg',
+    '89504e47': 'png',
+    '47494638': 'gif',
+    '52494646': 'webp',
+  };
+  
+  return Object.keys(signatures).some(sig => hex.startsWith(sig));
+};
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -35,11 +67,16 @@ const EditProfileDialog = ({ open, onOpenChange, profile, onProfileUpdated }: Ed
   const [avatarPreview, setAvatarPreview] = useState<string | null>(profile.avatar_url);
   const [bannerPreview, setBannerPreview] = useState<string | null>(profile.banner_url);
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5242880) {
         toast.error("Avatar image must be less than 5MB");
+        return;
+      }
+      const isValid = await validateImageFile(file);
+      if (!isValid) {
+        toast.error("Invalid image file. Please upload a valid JPEG, PNG, GIF, or WebP image.");
         return;
       }
       setAvatarFile(file);
@@ -47,11 +84,16 @@ const EditProfileDialog = ({ open, onOpenChange, profile, onProfileUpdated }: Ed
     }
   };
 
-  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5242880) {
         toast.error("Banner image must be less than 5MB");
+        return;
+      }
+      const isValid = await validateImageFile(file);
+      if (!isValid) {
+        toast.error("Invalid image file. Please upload a valid JPEG, PNG, GIF, or WebP image.");
         return;
       }
       setBannerFile(file);
@@ -81,6 +123,8 @@ const EditProfileDialog = ({ open, onOpenChange, profile, onProfileUpdated }: Ed
     setLoading(true);
 
     try {
+      const validatedData = profileSchema.parse({ displayName, bio, website, location });
+      
       let avatarUrl = profile.avatar_url;
       let bannerUrl = profile.banner_url;
 
@@ -95,10 +139,10 @@ const EditProfileDialog = ({ open, onOpenChange, profile, onProfileUpdated }: Ed
       const { error } = await supabase
         .from("profiles")
         .update({
-          display_name: displayName.trim() || null,
-          bio: bio.trim() || null,
-          website: website.trim() || null,
-          location: location.trim() || null,
+          display_name: validatedData.displayName || null,
+          bio: validatedData.bio || null,
+          website: validatedData.website || null,
+          location: validatedData.location || null,
           avatar_url: avatarUrl,
           banner_url: bannerUrl,
         })
@@ -110,7 +154,11 @@ const EditProfileDialog = ({ open, onOpenChange, profile, onProfileUpdated }: Ed
       onProfileUpdated();
       onOpenChange(false);
     } catch (error: any) {
-      toast.error(error.message || "Failed to update profile");
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message || "Failed to update profile");
+      }
     } finally {
       setLoading(false);
     }
