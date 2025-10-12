@@ -104,6 +104,17 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
         setLikesCount((prev) => prev - 1);
         setIsLiked(false);
       } else {
+        // If user has disliked, remove the dislike first
+        if (isBrokenHearted) {
+          await supabase
+            .from("broken_hearts")
+            .delete()
+            .eq("post_id", post.id)
+            .eq("user_id", currentUserId);
+          setBrokenHeartsCount((prev) => prev - 1);
+          setIsBrokenHearted(false);
+        }
+        
         await supabase.from("likes").insert({
           post_id: post.id,
           user_id: currentUserId,
@@ -174,6 +185,17 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
         setBrokenHeartsCount((prev) => prev - 1);
         setIsBrokenHearted(false);
       } else {
+        // If user has liked, remove the like first
+        if (isLiked) {
+          await supabase
+            .from("likes")
+            .delete()
+            .eq("post_id", post.id)
+            .eq("user_id", currentUserId);
+          setLikesCount((prev) => prev - 1);
+          setIsLiked(false);
+        }
+        
         await supabase.from("broken_hearts").insert({
           post_id: post.id,
           user_id: currentUserId,
@@ -195,9 +217,26 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
     setShowComments(!showComments);
   };
 
+  const handlePostClick = (e: React.MouseEvent) => {
+    // Don't toggle comments if clicking on interactive elements
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('button') || 
+      target.closest('a') || 
+      target.closest('img') ||
+      target.closest('video')
+    ) {
+      return;
+    }
+    handleCommentClick();
+  };
+
   return (
     <>
-      <Card className="p-4 space-y-3 hover:bg-secondary/50 transition-colors">
+      <Card 
+        className="p-4 space-y-3 hover:bg-secondary/50 transition-colors cursor-pointer" 
+        onClick={handlePostClick}
+      >
         <div className="flex items-start gap-3">
           <Avatar 
             className="cursor-pointer" 
@@ -247,11 +286,21 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
             </div>
             <p className="mt-2 whitespace-pre-wrap break-words">{post.content}</p>
             {post.image_url && (
-              <img
-                src={post.image_url}
-                alt="Post image"
-                className="mt-3 rounded-lg max-h-96 w-full object-cover"
-              />
+              <>
+                {post.image_url.match(/\.(mp4|webm|mov|quicktime)$/i) ? (
+                  <video
+                    src={post.image_url}
+                    controls
+                    className="mt-3 rounded-lg max-h-96 w-full"
+                  />
+                ) : (
+                  <img
+                    src={post.image_url}
+                    alt="Post media"
+                    className="mt-3 rounded-lg max-h-96 w-full object-cover"
+                  />
+                )}
+              </>
             )}
           </div>
         </div>
