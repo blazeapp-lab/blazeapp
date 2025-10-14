@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, User, Trash2, Edit, ThumbsDown } from "lucide-react";
+import { Heart, MessageCircle, User, Trash2, Edit, ThumbsDown, Repeat2, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import CommentSection from "./CommentSection";
+import FullScreenPost from "./FullScreenPost";
 import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
@@ -34,6 +35,8 @@ interface PostProps {
     likes_count: number;
     comments_count: number;
     broken_hearts_count: number;
+    reposts_count: number;
+    views_count: number;
     created_at: string;
     user_id: string;
     profiles: {
@@ -53,7 +56,10 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [isBrokenHearted, setIsBrokenHearted] = useState(false);
   const [brokenHeartsCount, setBrokenHeartsCount] = useState(post.broken_hearts_count);
+  const [isReposted, setIsReposted] = useState(false);
+  const [repostsCount, setRepostsCount] = useState(post.reposts_count);
   const [showComments, setShowComments] = useState(false);
+  const [showFullScreen, setShowFullScreen] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
@@ -63,6 +69,7 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
     if (currentUserId) {
       checkIfLiked();
       checkIfBrokenHearted();
+      checkIfReposted();
     }
   }, [post.id, currentUserId]);
 
@@ -86,6 +93,17 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
       .eq("user_id", currentUserId)
       .maybeSingle();
     setIsBrokenHearted(!!data);
+  };
+
+  const checkIfReposted = async () => {
+    if (!currentUserId) return;
+    const { data } = await supabase
+      .from("reposts")
+      .select("id")
+      .eq("post_id", post.id)
+      .eq("user_id", currentUserId)
+      .maybeSingle();
+    setIsReposted(!!data);
   };
 
   const handleLike = async () => {
@@ -208,6 +226,34 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
     }
   };
 
+  const handleRepost = async () => {
+    if (!currentUserId) {
+      toast.error("Please sign in to repost");
+      navigate("/auth");
+      return;
+    }
+    try {
+      if (isReposted) {
+        await supabase
+          .from("reposts")
+          .delete()
+          .eq("post_id", post.id)
+          .eq("user_id", currentUserId);
+        setRepostsCount((prev) => prev - 1);
+        setIsReposted(false);
+      } else {
+        await supabase.from("reposts").insert({
+          post_id: post.id,
+          user_id: currentUserId,
+        });
+        setRepostsCount((prev) => prev + 1);
+        setIsReposted(true);
+      }
+    } catch (error: any) {
+      toast.error("Failed to repost");
+    }
+  };
+
   const handleCommentClick = () => {
     if (!currentUserId) {
       toast.error("Please sign in to comment");
@@ -217,8 +263,7 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
     setShowComments(!showComments);
   };
 
-  const handlePostClick = (e: React.MouseEvent) => {
-    // Don't toggle comments if clicking on interactive elements
+  const handlePostClick = async (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     if (
       target.closest('button') || 
@@ -228,7 +273,20 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
     ) {
       return;
     }
-    handleCommentClick();
+
+    // Track view
+    if (currentUserId) {
+      try {
+        await supabase.from("post_views").insert({
+          post_id: post.id,
+          user_id: currentUserId,
+        }).select().maybeSingle();
+      } catch (error) {
+        // Ignore duplicate view errors
+      }
+    }
+
+    setShowFullScreen(true);
   };
 
   return (
@@ -332,17 +390,45 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
             variant="ghost"
             size="sm"
             className="gap-2"
+            onClick={handleRepost}
+          >
+            <Repeat2
+              className={`h-5 w-5 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
+            />
+            <span>{repostsCount}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2"
             onClick={handleCommentClick}
           >
             <MessageCircle className="h-5 w-5" />
             <span>{post.comments_count}</span>
           </Button>
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <Eye className="h-5 w-5" />
+            <span>{post.views_count}</span>
+          </div>
         </div>
 
         {showComments && currentUserId && (
           <CommentSection postId={post.id} currentUserId={currentUserId} />
         )}
       </Card>
+
+      <FullScreenPost
+        post={post}
+        isLiked={isLiked}
+        isBrokenHearted={isBrokenHearted}
+        isReposted={isReposted}
+        onLike={handleLike}
+        onBrokenHeart={handleBrokenHeart}
+        onRepost={handleRepost}
+        currentUserId={currentUserId}
+        open={showFullScreen}
+        onOpenChange={setShowFullScreen}
+      />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

@@ -43,11 +43,42 @@ export type Database = {
           },
         ]
       }
+      comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           content: string
           created_at: string
           id: string
+          likes_count: number
+          parent_comment_id: string | null
           post_id: string
           updated_at: string
           user_id: string
@@ -56,6 +87,8 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          likes_count?: number
+          parent_comment_id?: string | null
           post_id: string
           updated_at?: string
           user_id: string
@@ -64,11 +97,20 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          likes_count?: number
+          parent_comment_id?: string | null
           post_id?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "comments_post_id_fkey"
             columns: ["post_id"]
@@ -142,6 +184,35 @@ export type Database = {
           },
         ]
       }
+      post_views: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_views_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           broken_hearts_count: number
@@ -151,8 +222,10 @@ export type Database = {
           id: string
           image_url: string | null
           likes_count: number
+          reposts_count: number
           updated_at: string
           user_id: string
+          views_count: number
         }
         Insert: {
           broken_hearts_count?: number
@@ -162,8 +235,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           likes_count?: number
+          reposts_count?: number
           updated_at?: string
           user_id: string
+          views_count?: number
         }
         Update: {
           broken_hearts_count?: number
@@ -173,8 +248,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           likes_count?: number
+          reposts_count?: number
           updated_at?: string
           user_id?: string
+          views_count?: number
         }
         Relationships: [
           {
@@ -224,6 +301,35 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      reposts: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reposts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
