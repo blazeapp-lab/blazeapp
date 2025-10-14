@@ -58,6 +58,7 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
   const [brokenHeartsCount, setBrokenHeartsCount] = useState(post.broken_hearts_count);
   const [isReposted, setIsReposted] = useState(false);
   const [repostsCount, setRepostsCount] = useState(post.reposts_count);
+  const [viewsCount, setViewsCount] = useState(post.views_count);
   const [showComments, setShowComments] = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -241,6 +242,7 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
           .eq("user_id", currentUserId);
         setRepostsCount((prev) => prev - 1);
         setIsReposted(false);
+        toast.success("Repost removed");
       } else {
         await supabase.from("reposts").insert({
           post_id: post.id,
@@ -248,6 +250,7 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
         });
         setRepostsCount((prev) => prev + 1);
         setIsReposted(true);
+        toast.success("Reposted!");
       }
     } catch (error: any) {
       toast.error("Failed to repost");
@@ -280,7 +283,8 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
         await supabase.from("post_views").insert({
           post_id: post.id,
           user_id: currentUserId,
-        }).select().maybeSingle();
+        });
+        setViewsCount((prev) => prev + 1);
       } catch (error) {
         // Ignore duplicate view errors
       }
@@ -408,7 +412,7 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
           </Button>
           <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <Eye className="h-5 w-5" />
-            <span>{post.views_count}</span>
+            <span>{viewsCount}</span>
           </div>
         </div>
 
