@@ -63,7 +63,8 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   };
 
   const fetchUserPosts = async () => {
-    const { data, error } = await supabase
+    // Fetch original posts
+    const { data: originalPosts, error: postsError } = await supabase
       .from("posts")
       .select(`
         *,
@@ -77,11 +78,48 @@ const Profile = ({ currentUserId }: ProfileProps) => {
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
-    if (error) {
+    if (postsError) {
       toast.error("Failed to load posts");
       return;
     }
-    setPosts(data || []);
+
+    // Fetch reposts
+    const { data: repostData, error: repostsError } = await supabase
+      .from("reposts")
+      .select(`
+        created_at,
+        posts (
+          *,
+          profiles (
+            id,
+            username,
+            display_name,
+            avatar_url
+          )
+        )
+      `)
+      .eq("user_id", userId);
+
+    if (repostsError) {
+      toast.error("Failed to load reposts");
+      return;
+    }
+
+    // Flatten reposts and add repost metadata
+    const repostedPosts = (repostData || []).map((repost: any) => ({
+      ...repost.posts,
+      reposted_at: repost.created_at,
+      is_repost: true
+    }));
+
+    // Combine and sort by date (using repost date for reposts, created_at for originals)
+    const allPosts = [...(originalPosts || []), ...repostedPosts].sort((a, b) => {
+      const dateA = new Date(a.reposted_at || a.created_at);
+      const dateB = new Date(b.reposted_at || b.created_at);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+    setPosts(allPosts);
   };
 
   const fetchFollowData = async () => {
