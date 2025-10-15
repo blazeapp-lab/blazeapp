@@ -1,4 +1,4 @@
-import { Home, User, LogOut, PenSquare } from "lucide-react";
+import { Home, User, LogOut, PenSquare, Search as SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ const Header = ({ userId }: HeaderProps) => {
 
   const navItems = [
     { icon: Home, label: "Home", path: "/" },
+    { icon: SearchIcon, label: "Search", path: "/search" },
     { icon: User, label: "Profile", path: `/profile/${userId}` },
   ];
 
