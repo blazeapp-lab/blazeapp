@@ -67,12 +67,18 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
+    // Sync counters with prop values
+    setLikesCount(post.likes_count);
+    setBrokenHeartsCount(post.broken_hearts_count);
+    setRepostsCount(post.reposts_count);
+    setViewsCount(post.views_count);
+    
     if (currentUserId) {
       checkIfLiked();
       checkIfBrokenHearted();
       checkIfReposted();
     }
-  }, [post.id, currentUserId]);
+  }, [post.id, post.likes_count, post.broken_hearts_count, post.reposts_count, post.views_count, currentUserId]);
 
   const checkIfLiked = async () => {
     if (!currentUserId) return;
