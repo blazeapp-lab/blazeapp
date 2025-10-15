@@ -46,8 +46,7 @@ const Header = ({ userId }: HeaderProps) => {
                   size="sm"
                   onClick={() => navigate(item.path)}
                 >
-                  <Icon className="mr-2 h-4 w-4" />
-                  {item.label}
+                  <Icon className="h-4 w-4" />
                 </Button>
               );
             })}
@@ -61,7 +60,7 @@ const Header = ({ userId }: HeaderProps) => {
               }}
             >
               <PenSquare className="mr-2 h-4 w-4" />
-              New Post
+              Post
             </Button>
             
             <Button
@@ -69,8 +68,7 @@ const Header = ({ userId }: HeaderProps) => {
               size="sm"
               onClick={handleLogout}
             >
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
+              <LogOut className="h-4 w-4" />
             </Button>
           </nav>
         </div>
