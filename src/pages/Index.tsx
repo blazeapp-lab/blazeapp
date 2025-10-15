@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
-import Header from "@/components/Header";
 import Home from "./Home";
 
 const Index = () => {
@@ -36,14 +35,7 @@ const Index = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      {user && <Header userId={user.id} />}
-      <main className="max-w-7xl mx-auto p-6">
-        <Home currentUserId={user?.id} />
-      </main>
-    </div>
-  );
+  return <Home currentUserId={user?.id} />;
 };
 
 export default Index;
