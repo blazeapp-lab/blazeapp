@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { Search as SearchIcon, User } from "lucide-react";
+import { Search as SearchIcon, User, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Post from "@/components/Post";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ const Search = ({ currentUserId }: SearchProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [profiles, setProfiles] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
+  const [trendingPosts, setTrendingPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
@@ -72,6 +73,39 @@ const Search = ({ currentUserId }: SearchProps) => {
       handleSearch();
     }
   };
+
+  useEffect(() => {
+    const fetchTrendingPosts = async () => {
+      try {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+        const { data, error } = await supabase
+          .from("posts")
+          .select(`
+            *,
+            profiles (
+              id,
+              username,
+              display_name,
+              avatar_url
+            )
+          `)
+          .gte("created_at", oneWeekAgo.toISOString())
+          .order("likes_count", { ascending: false })
+          .order("comments_count", { ascending: false })
+          .order("reposts_count", { ascending: false })
+          .limit(20);
+
+        if (error) throw error;
+        setTrendingPosts(data || []);
+      } catch (error) {
+        console.error("Failed to fetch trending posts:", error);
+      }
+    };
+
+    fetchTrendingPosts();
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -162,13 +196,36 @@ const Search = ({ currentUserId }: SearchProps) => {
       )}
 
       {!hasSearched && (
-        <Card className="p-12 text-center">
-          <SearchIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-xl font-semibold mb-2">Search Blaze</h2>
-          <p className="text-muted-foreground">
-            Find people, posts, and topics that interest you
-          </p>
-        </Card>
+        <div className="space-y-6">
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Trending This Week</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Most popular posts from the last 7 days
+            </p>
+          </Card>
+          
+          {trendingPosts.length === 0 ? (
+            <Card className="p-8 text-center text-muted-foreground">
+              No trending posts this week
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {trendingPosts.map((post) => (
+                <Post
+                  key={post.id}
+                  post={post}
+                  currentUserId={currentUserId}
+                  onPostDeleted={() => {
+                    setTrendingPosts(trendingPosts.filter(p => p.id !== post.id));
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

@@ -35,7 +35,7 @@ const Header = ({ userId }: HeaderProps) => {
             Blaze
           </button>
           
-          <nav className="flex items-center gap-2">
+          <nav className="flex items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -59,8 +59,7 @@ const Header = ({ userId }: HeaderProps) => {
                 createPostBtn?.click();
               }}
             >
-              <PenSquare className="mr-2 h-4 w-4" />
-              Post
+              <PenSquare className="h-4 w-4" />
             </Button>
             
             <Button
