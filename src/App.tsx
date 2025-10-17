@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Search from "./pages/Search";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Header from "@/components/Header";
 import { useEffect, useState } from "react";
@@ -46,6 +47,7 @@ const App = () => {
                   <Route path="/" element={<Index />} />
                   <Route path="/search" element={<Search currentUserId={user?.id} />} />
                   <Route path="/profile/:userId" element={<Profile currentUserId={user?.id} />} />
+                  <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </MainLayout>

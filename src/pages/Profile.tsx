@@ -3,9 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, MapPin, Link as LinkIcon, Calendar, ArrowLeft } from "lucide-react";
+import { User, MapPin, Link as LinkIcon, Calendar, ArrowLeft, Settings } from "lucide-react";
 import Post from "@/components/Post";
 import EditProfileDialog from "@/components/EditProfileDialog";
+import CreatePost from "@/components/CreatePost";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -215,13 +216,24 @@ const Profile = ({ currentUserId }: ProfileProps) => {
 
       <div className="bg-card rounded-lg overflow-hidden">
         <div
-          className="h-48 bg-secondary"
+          className="h-48 bg-secondary relative"
           style={{
             backgroundImage: profile.banner_url ? `url(${profile.banner_url})` : undefined,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
-        />
+        >
+          {currentUserId === userId && (
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={() => navigate("/settings")}
+              className="absolute top-4 right-4"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
         
         <div className="p-6">
           <div className="flex justify-between items-start -mt-16 mb-4">
@@ -295,6 +307,9 @@ const Profile = ({ currentUserId }: ProfileProps) => {
 
       <div className="mt-6 space-y-4">
         <h2 className="text-xl font-bold">Posts</h2>
+        {currentUserId === userId && (
+          <CreatePost userId={currentUserId} onPostCreated={fetchUserPosts} />
+        )}
         {posts.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">No posts yet</p>
         ) : (
