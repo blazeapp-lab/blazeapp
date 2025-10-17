@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ArrowLeft, Upload, User } from "lucide-react";
 import { toast } from "sonner";
 
 const Settings = () => {
@@ -16,6 +17,9 @@ const Settings = () => {
   const [username, setUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [bannerUrl, setBannerUrl] = useState("");
+  const [userId, setUserId] = useState("");
 
   useEffect(() => {
     fetchUserData();
@@ -24,19 +28,104 @@ const Settings = () => {
   const fetchUserData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
+      setUserId(user.id);
       setEmail(user.email || "");
       setPhone(user.phone || "");
       
       const { data: profile } = await supabase
         .from("profiles")
-        .select("username")
+        .select("username, avatar_url, banner_url")
         .eq("id", user.id)
         .single();
       
       if (profile) {
         setUsername(profile.username);
+        setAvatarUrl(profile.avatar_url || "");
+        setBannerUrl(profile.banner_url || "");
       }
     }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    setLoading(true);
+    const fileExt = file.name.split(".").pop();
+    const filePath = `${userId}/avatar-${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("profiles")
+      .upload(filePath, file);
+
+    if (uploadError) {
+      toast.error("Failed to upload avatar");
+      setLoading(false);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from("profiles")
+      .getPublicUrl(filePath);
+
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ avatar_url: publicUrl })
+      .eq("id", userId);
+
+    if (updateError) {
+      toast.error("Failed to update avatar");
+    } else {
+      setAvatarUrl(publicUrl);
+      toast.success("Avatar updated successfully");
+    }
+    setLoading(false);
+  };
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    setLoading(true);
+    const fileExt = file.name.split(".").pop();
+    const filePath = `${userId}/banner-${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("profiles")
+      .upload(filePath, file);
+
+    if (uploadError) {
+      toast.error("Failed to upload banner");
+      setLoading(false);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from("profiles")
+      .getPublicUrl(filePath);
+
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ banner_url: publicUrl })
+      .eq("id", userId);
+
+    if (updateError) {
+      toast.error("Failed to update banner");
+    } else {
+      setBannerUrl(publicUrl);
+      toast.success("Banner updated successfully");
+    }
+    setLoading(false);
   };
 
   const handleUpdateEmail = async () => {
@@ -121,6 +210,76 @@ const Settings = () => {
       <h1 className="text-3xl font-bold mb-6">Settings</h1>
 
       <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Picture</CardTitle>
+            <CardDescription>Update your profile picture</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={avatarUrl || undefined} />
+                <AvatarFallback className="text-2xl">
+                  <User />
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <Label htmlFor="avatar" className="cursor-pointer">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
+                    <Upload className="h-4 w-4" />
+                    Upload Avatar
+                  </div>
+                </Label>
+                <Input
+                  id="avatar"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Banner Image</CardTitle>
+            <CardDescription>Update your profile banner</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-4">
+              {bannerUrl && (
+                <div
+                  className="h-32 rounded-md bg-secondary"
+                  style={{
+                    backgroundImage: `url(${bannerUrl})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                />
+              )}
+              <div>
+                <Label htmlFor="banner" className="cursor-pointer">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 inline-flex">
+                    <Upload className="h-4 w-4" />
+                    Upload Banner
+                  </div>
+                </Label>
+                <Input
+                  id="banner"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBannerUpload}
+                  className="hidden"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Email</CardTitle>
