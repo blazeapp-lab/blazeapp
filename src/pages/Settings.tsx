@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Upload, User } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,6 +23,7 @@ const Settings = () => {
   const [bannerUrl, setBannerUrl] = useState("");
   const [userId, setUserId] = useState("");
   const [bio, setBio] = useState("");
+  const [isPrivate, setIsPrivate] = useState(false);
 
   useEffect(() => {
     fetchUserData();
@@ -36,7 +38,7 @@ const Settings = () => {
       
       const { data: profile } = await supabase
         .from("profiles")
-        .select("username, avatar_url, banner_url, bio")
+        .select("username, avatar_url, banner_url, bio, is_private")
         .eq("id", user.id)
         .single();
       
@@ -45,6 +47,7 @@ const Settings = () => {
         setAvatarUrl(profile.avatar_url || "");
         setBannerUrl(profile.banner_url || "");
         setBio(profile.bio || "");
+        setIsPrivate(profile.is_private || false);
       }
     }
   };
@@ -188,6 +191,26 @@ const Settings = () => {
         toast.error(error.message);
       } else {
         toast.success("Bio updated successfully");
+      }
+    }
+    setLoading(false);
+  };
+
+  const handlePrivacyToggle = async (checked: boolean) => {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_private: checked })
+        .eq("id", user.id);
+      
+      if (error) {
+        toast.error(error.message);
+      } else {
+        setIsPrivate(checked);
+        toast.success(checked ? "Account is now private" : "Account is now public");
       }
     }
     setLoading(false);
@@ -362,6 +385,29 @@ const Settings = () => {
             <Button onClick={handleUpdateBio} disabled={loading}>
               Update Bio
             </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Privacy</CardTitle>
+            <CardDescription>Control who can see your profile and posts</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="privacy">Private Account</Label>
+                <p className="text-sm text-muted-foreground">
+                  When your account is private, only followers can see your posts
+                </p>
+              </div>
+              <Switch
+                id="privacy"
+                checked={isPrivate}
+                onCheckedChange={handlePrivacyToggle}
+                disabled={loading}
+              />
+            </div>
           </CardContent>
         </Card>
 

@@ -271,6 +271,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_private: boolean
           location: string | null
           updated_at: string
           username: string
@@ -283,6 +284,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          is_private?: boolean
           location?: string | null
           updated_at?: string
           username: string
@@ -295,6 +297,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_private?: boolean
           location?: string | null
           updated_at?: string
           username?: string
