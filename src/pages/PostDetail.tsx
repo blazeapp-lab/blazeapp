@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, User, Trash2, Edit, ThumbsDown, Repeat2, Eye, Share2 } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Heart, MessageCircle, User, Repeat2, Eye, ThumbsDown, ArrowLeft, Share2, Trash2, Edit } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import CommentSection from "./CommentSection";
-import { useNavigate } from "react-router-dom";
+import CommentSection from "@/components/CommentSection";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,64 +26,91 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
-interface PostProps {
-  post: {
-    id: string;
-    content: string;
-    image_url: string | null;
-    likes_count: number;
-    comments_count: number;
-    broken_hearts_count: number;
-    reposts_count: number;
-    views_count: number;
-    created_at: string;
-    user_id: string;
-    profiles: {
-      id: string;
-      username: string;
-      display_name: string | null;
-      avatar_url: string | null;
-    };
-  };
+interface PostDetailProps {
   currentUserId: string | undefined;
-  onPostDeleted?: () => void;
 }
 
-const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
+const PostDetail = ({ currentUserId }: PostDetailProps) => {
+  const { postId } = useParams();
   const navigate = useNavigate();
+  const [post, setPost] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(post.likes_count);
+  const [likesCount, setLikesCount] = useState(0);
   const [isBrokenHearted, setIsBrokenHearted] = useState(false);
-  const [brokenHeartsCount, setBrokenHeartsCount] = useState(post.broken_hearts_count);
+  const [brokenHeartsCount, setBrokenHeartsCount] = useState(0);
   const [isReposted, setIsReposted] = useState(false);
-  const [repostsCount, setRepostsCount] = useState(post.reposts_count);
-  const [viewsCount, setViewsCount] = useState(post.views_count);
-  const [showComments, setShowComments] = useState(false);
+  const [repostsCount, setRepostsCount] = useState(0);
+  const [viewsCount, setViewsCount] = useState(0);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [editContent, setEditContent] = useState(post.content);
+  const [editContent, setEditContent] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    // Sync counters with prop values
-    setLikesCount(post.likes_count);
-    setBrokenHeartsCount(post.broken_hearts_count);
-    setRepostsCount(post.reposts_count);
-    setViewsCount(post.views_count);
-    
-    if (currentUserId) {
-      checkIfLiked();
-      checkIfBrokenHearted();
-      checkIfReposted();
+    if (postId) {
+      fetchPost();
+      trackView();
     }
-  }, [post.id, post.likes_count, post.broken_hearts_count, post.reposts_count, post.views_count, currentUserId]);
+  }, [postId, currentUserId]);
+
+  const fetchPost = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("posts")
+        .select(`
+          *,
+          profiles (
+            id,
+            username,
+            display_name,
+            avatar_url
+          )
+        `)
+        .eq("id", postId)
+        .single();
+
+      if (error) throw error;
+      
+      setPost(data);
+      setLikesCount(data.likes_count);
+      setBrokenHeartsCount(data.broken_hearts_count);
+      setRepostsCount(data.reposts_count);
+      setViewsCount(data.views_count);
+      setEditContent(data.content);
+
+      if (currentUserId) {
+        checkIfLiked();
+        checkIfBrokenHearted();
+        checkIfReposted();
+      }
+    } catch (error: any) {
+      toast.error("Failed to load post");
+      navigate("/");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const trackView = async () => {
+    if (!currentUserId || !postId) return;
+    
+    try {
+      await supabase.from("post_views").insert({
+        post_id: postId,
+        user_id: currentUserId,
+      });
+    } catch (error) {
+      // Ignore duplicate view errors
+    }
+  };
 
   const checkIfLiked = async () => {
     if (!currentUserId) return;
     const { data } = await supabase
       .from("likes")
       .select("id")
-      .eq("post_id", post.id)
+      .eq("post_id", postId)
       .eq("user_id", currentUserId)
       .maybeSingle();
     setIsLiked(!!data);
@@ -94,7 +121,7 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
     const { data } = await supabase
       .from("broken_hearts")
       .select("id")
-      .eq("post_id", post.id)
+      .eq("post_id", postId)
       .eq("user_id", currentUserId)
       .maybeSingle();
     setIsBrokenHearted(!!data);
@@ -105,7 +132,7 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
     const { data } = await supabase
       .from("reposts")
       .select("id")
-      .eq("post_id", post.id)
+      .eq("post_id", postId)
       .eq("user_id", currentUserId)
       .maybeSingle();
     setIsReposted(!!data);
@@ -122,24 +149,23 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
         await supabase
           .from("likes")
           .delete()
-          .eq("post_id", post.id)
+          .eq("post_id", postId)
           .eq("user_id", currentUserId);
         setLikesCount((prev) => prev - 1);
         setIsLiked(false);
       } else {
-        // If user has disliked, remove the dislike first
         if (isBrokenHearted) {
           await supabase
             .from("broken_hearts")
             .delete()
-            .eq("post_id", post.id)
+            .eq("post_id", postId)
             .eq("user_id", currentUserId);
           setBrokenHeartsCount((prev) => prev - 1);
           setIsBrokenHearted(false);
         }
         
         await supabase.from("likes").insert({
-          post_id: post.id,
+          post_id: postId,
           user_id: currentUserId,
         });
         setLikesCount((prev) => prev + 1);
@@ -147,48 +173,6 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
       }
     } catch (error: any) {
       toast.error("Failed to update like");
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      const { error } = await supabase
-        .from("posts")
-        .delete()
-        .eq("id", post.id);
-
-      if (error) throw error;
-
-      toast.success("Post deleted successfully");
-      setShowDeleteDialog(false);
-      onPostDeleted?.();
-    } catch (error: any) {
-      toast.error("Failed to delete post");
-    }
-  };
-
-  const handleEdit = async () => {
-    if (!editContent.trim()) {
-      toast.error("Post content cannot be empty");
-      return;
-    }
-
-    setIsEditing(true);
-    try {
-      const { error } = await supabase
-        .from("posts")
-        .update({ content: editContent })
-        .eq("id", post.id);
-
-      if (error) throw error;
-
-      toast.success("Post updated successfully");
-      setShowEditDialog(false);
-      onPostDeleted?.(); // Refresh the posts
-    } catch (error: any) {
-      toast.error("Failed to update post");
-    } finally {
-      setIsEditing(false);
     }
   };
 
@@ -203,24 +187,23 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
         await supabase
           .from("broken_hearts")
           .delete()
-          .eq("post_id", post.id)
+          .eq("post_id", postId)
           .eq("user_id", currentUserId);
         setBrokenHeartsCount((prev) => prev - 1);
         setIsBrokenHearted(false);
       } else {
-        // If user has liked, remove the like first
         if (isLiked) {
           await supabase
             .from("likes")
             .delete()
-            .eq("post_id", post.id)
+            .eq("post_id", postId)
             .eq("user_id", currentUserId);
           setLikesCount((prev) => prev - 1);
           setIsLiked(false);
         }
         
         await supabase.from("broken_hearts").insert({
-          post_id: post.id,
+          post_id: postId,
           user_id: currentUserId,
         });
         setBrokenHeartsCount((prev) => prev + 1);
@@ -242,14 +225,14 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
         await supabase
           .from("reposts")
           .delete()
-          .eq("post_id", post.id)
+          .eq("post_id", postId)
           .eq("user_id", currentUserId);
         setRepostsCount((prev) => prev - 1);
         setIsReposted(false);
         toast.success("Repost removed");
       } else {
         await supabase.from("reposts").insert({
-          post_id: post.id,
+          post_id: postId,
           user_id: currentUserId,
         });
         setRepostsCount((prev) => prev + 1);
@@ -261,67 +244,98 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
     }
   };
 
-  const handleCommentClick = () => {
-    if (!currentUserId) {
-      toast.error("Please sign in to comment");
-      navigate("/auth");
-      return;
-    }
-    setShowComments(!showComments);
-  };
-
-  const handlePostClick = async (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (
-      target.closest('button') || 
-      target.closest('a') || 
-      target.closest('img') ||
-      target.closest('video')
-    ) {
-      return;
-    }
-
-    navigate(`/post/${post.id}`);
-  };
-
   const handleShare = () => {
-    const url = `${window.location.origin}/post/${post.id}`;
+    const url = `${window.location.origin}/post/${postId}`;
     navigator.clipboard.writeText(url);
     toast.success("Link copied to clipboard!");
   };
 
+  const handleDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from("posts")
+        .delete()
+        .eq("id", postId);
+
+      if (error) throw error;
+
+      toast.success("Post deleted successfully");
+      navigate("/");
+    } catch (error: any) {
+      toast.error("Failed to delete post");
+    }
+  };
+
+  const handleEdit = async () => {
+    if (!editContent.trim()) {
+      toast.error("Post content cannot be empty");
+      return;
+    }
+
+    setIsEditing(true);
+    try {
+      const { error } = await supabase
+        .from("posts")
+        .update({ content: editContent })
+        .eq("id", postId);
+
+      if (error) throw error;
+
+      toast.success("Post updated successfully");
+      setShowEditDialog(false);
+      fetchPost();
+    } catch (error: any) {
+      toast.error("Failed to update post");
+    } finally {
+      setIsEditing(false);
+    }
+  };
+
+  if (loading || !post) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-lg">Loading post...</div>
+      </div>
+    );
+  }
+
   return (
-    <>
-      <Card 
-        className="p-4 space-y-3 hover:bg-secondary/50 transition-colors cursor-pointer" 
-        onClick={handlePostClick}
+    <div className="max-w-2xl mx-auto">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate(-1)}
+        className="mb-4"
       >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
+
+      <Card className="p-6 space-y-4">
         <div className="flex items-start gap-3">
           <Avatar 
-            className="cursor-pointer" 
+            className="h-12 w-12 cursor-pointer" 
             onClick={() => navigate(`/profile/${post.profiles.id}`)}
           >
             <AvatarImage src={post.profiles.avatar_url || undefined} />
             <AvatarFallback>
-              <User className="h-4 w-4" />
+              <User className="h-6 w-6" />
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span 
-                className="font-semibold hover:underline cursor-pointer"
-                onClick={() => navigate(`/profile/${post.profiles.id}`)}
-              >
-                {post.profiles.display_name || post.profiles.username}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                @{post.profiles.username}
-              </span>
-              <span className="text-sm text-muted-foreground">·</span>
-              <span className="text-sm text-muted-foreground">
-                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-              </span>
-              <div className="ml-auto flex gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span 
+                  className="font-semibold text-lg hover:underline cursor-pointer"
+                  onClick={() => navigate(`/profile/${post.profiles.id}`)}
+                >
+                  {post.profiles.display_name || post.profiles.username}
+                </span>
+                <span className="text-muted-foreground">
+                  @{post.profiles.username}
+                </span>
+              </div>
+              <div className="flex gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -334,10 +348,7 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        setEditContent(post.content);
-                        setShowEditDialog(true);
-                      }}
+                      onClick={() => setShowEditDialog(true)}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -352,28 +363,31 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
                 )}
               </div>
             </div>
-            <p className="mt-2 whitespace-pre-wrap break-words">{post.content}</p>
+            <span className="text-muted-foreground text-sm">
+              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+            </span>
+            <p className="mt-3 text-lg whitespace-pre-wrap break-words">{post.content}</p>
             {post.image_url && (
               <>
                 {post.image_url.match(/\.(mp4|webm|mov|quicktime)$/i) ? (
                   <video
                     src={post.image_url}
                     controls
-                    className="mt-3 rounded-lg max-h-96 w-full"
+                    className="mt-4 rounded-lg w-full"
                   />
                 ) : (
                   <img
                     src={post.image_url}
                     alt="Post media"
-                    className="mt-3 rounded-lg max-h-96 w-full object-cover"
+                    className="mt-4 rounded-lg w-full object-contain max-h-[500px]"
                   />
                 )}
               </>
             )}
           </div>
         </div>
-        
-        <div className="flex items-center gap-4 pt-2">
+
+        <div className="flex items-center gap-6 pt-4 border-t">
           <Button
             variant="ghost"
             size="sm"
@@ -411,7 +425,6 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
             variant="ghost"
             size="sm"
             className="gap-2"
-            onClick={handleCommentClick}
           >
             <MessageCircle className="h-5 w-5" />
             <span>{post.comments_count}</span>
@@ -422,7 +435,7 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
           </div>
         </div>
 
-        {showComments && currentUserId && (
+        {currentUserId && (
           <CommentSection postId={post.id} currentUserId={currentUserId} />
         )}
       </Card>
@@ -467,8 +480,8 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 };
 
-export default Post;
+export default PostDetail;
