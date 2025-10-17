@@ -20,6 +20,7 @@ interface Profile {
   website: string | null;
   location: string | null;
   created_at: string;
+  is_private: boolean;
 }
 
 interface ProfileProps {
@@ -36,14 +37,20 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [canViewPosts, setCanViewPosts] = useState(true);
 
   useEffect(() => {
     if (userId) {
       fetchProfile();
-      fetchUserPosts();
       fetchFollowData();
     }
   }, [userId, currentUserId]);
+
+  useEffect(() => {
+    if (profile) {
+      fetchUserPosts();
+    }
+  }, [profile, isFollowing, currentUserId]);
 
   const fetchProfile = async () => {
     try {
@@ -64,6 +71,15 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   };
 
   const fetchUserPosts = async () => {
+    // Check if user can view posts
+    if (profile?.is_private && currentUserId !== userId && !isFollowing) {
+      setPosts([]);
+      setCanViewPosts(false);
+      return;
+    }
+    
+    setCanViewPosts(true);
+    
     // Fetch original posts
     const { data: originalPosts, error: postsError } = await supabase
       .from("posts")
@@ -310,7 +326,12 @@ const Profile = ({ currentUserId }: ProfileProps) => {
         {currentUserId === userId && (
           <CreatePost userId={currentUserId} onPostCreated={fetchUserPosts} />
         )}
-        {posts.length === 0 ? (
+        {!canViewPosts ? (
+          <div className="text-center py-12 bg-card rounded-lg border">
+            <p className="text-muted-foreground">This account is private</p>
+            <p className="text-sm text-muted-foreground mt-2">Follow to see their posts</p>
+          </div>
+        ) : posts.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">No posts yet</p>
         ) : (
         posts.map((post) => (

@@ -15,25 +15,51 @@ const Home = ({ currentUserId }: HomeProps) => {
 
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [currentUserId]);
 
   const fetchPosts = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("posts")
         .select(`
           *,
-          profiles (
+          profiles!inner (
             id,
             username,
             display_name,
-            avatar_url
+            avatar_url,
+            is_private
           )
         `)
         .order("created_at", { ascending: false });
 
+      const { data, error } = await query;
+
       if (error) throw error;
-      setPosts(data || []);
+      
+      // Filter out posts from private accounts unless user is following them
+      let filteredPosts = data || [];
+      if (currentUserId) {
+        // Get list of users the current user is following
+        const { data: followingData } = await supabase
+          .from("follows")
+          .select("following_id")
+          .eq("follower_id", currentUserId);
+        
+        const followingIds = followingData?.map(f => f.following_id) || [];
+        
+        // Filter out private posts unless following or own posts
+        filteredPosts = filteredPosts.filter(post => 
+          !post.profiles.is_private || 
+          post.user_id === currentUserId ||
+          followingIds.includes(post.user_id)
+        );
+      } else {
+        // Not logged in - filter out all private accounts
+        filteredPosts = filteredPosts.filter(post => !post.profiles.is_private);
+      }
+      
+      setPosts(filteredPosts);
     } catch (error: any) {
       toast.error("Failed to load posts");
     } finally {

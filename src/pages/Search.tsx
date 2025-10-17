@@ -48,11 +48,12 @@ const Search = ({ currentUserId }: SearchProps) => {
         .from("posts")
         .select(`
           *,
-          profiles (
+          profiles!inner (
             id,
             username,
             display_name,
-            avatar_url
+            avatar_url,
+            is_private
           )
         `)
         .ilike("content", `%${searchQuery}%`)
@@ -60,7 +61,27 @@ const Search = ({ currentUserId }: SearchProps) => {
         .limit(50);
 
       if (postError) throw postError;
-      setPosts(postData || []);
+      
+      // Filter out posts from private accounts unless user is following them
+      let filteredPosts = postData || [];
+      if (currentUserId) {
+        const { data: followingData } = await supabase
+          .from("follows")
+          .select("following_id")
+          .eq("follower_id", currentUserId);
+        
+        const followingIds = followingData?.map(f => f.following_id) || [];
+        
+        filteredPosts = filteredPosts.filter(post => 
+          !post.profiles.is_private || 
+          post.user_id === currentUserId ||
+          followingIds.includes(post.user_id)
+        );
+      } else {
+        filteredPosts = filteredPosts.filter(post => !post.profiles.is_private);
+      }
+      
+      setPosts(filteredPosts);
     } catch (error: any) {
       toast.error("Failed to search");
     } finally {
@@ -84,11 +105,12 @@ const Search = ({ currentUserId }: SearchProps) => {
           .from("posts")
           .select(`
             *,
-            profiles (
+            profiles!inner (
               id,
               username,
               display_name,
-              avatar_url
+              avatar_url,
+              is_private
             )
           `)
           .gte("created_at", oneWeekAgo.toISOString())
@@ -98,14 +120,34 @@ const Search = ({ currentUserId }: SearchProps) => {
           .limit(20);
 
         if (error) throw error;
-        setTrendingPosts(data || []);
+        
+        // Filter out posts from private accounts unless user is following them
+        let filteredPosts = data || [];
+        if (currentUserId) {
+          const { data: followingData } = await supabase
+            .from("follows")
+            .select("following_id")
+            .eq("follower_id", currentUserId);
+          
+          const followingIds = followingData?.map(f => f.following_id) || [];
+          
+          filteredPosts = filteredPosts.filter(post => 
+            !post.profiles.is_private || 
+            post.user_id === currentUserId ||
+            followingIds.includes(post.user_id)
+          );
+        } else {
+          filteredPosts = filteredPosts.filter(post => !post.profiles.is_private);
+        }
+        
+        setTrendingPosts(filteredPosts);
       } catch (error) {
         console.error("Failed to fetch trending posts:", error);
       }
     };
 
     fetchTrendingPosts();
-  }, []);
+  }, [currentUserId]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

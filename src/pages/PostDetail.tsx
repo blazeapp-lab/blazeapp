@@ -64,13 +64,31 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
             id,
             username,
             display_name,
-            avatar_url
+            avatar_url,
+            is_private
           )
         `)
         .eq("id", postId)
         .single();
 
       if (error) throw error;
+      
+      // Check if user can view this post (if account is private)
+      if (data.profiles.is_private && currentUserId !== data.user_id) {
+        // Check if current user is following the post author
+        const { data: followData } = await supabase
+          .from("follows")
+          .select("id")
+          .eq("follower_id", currentUserId)
+          .eq("following_id", data.user_id)
+          .maybeSingle();
+        
+        if (!followData) {
+          toast.error("This account is private");
+          navigate("/");
+          return;
+        }
+      }
       
       setPost(data);
       setLikesCount(data.likes_count);
