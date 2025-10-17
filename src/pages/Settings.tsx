@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Upload, User } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,6 +21,7 @@ const Settings = () => {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [bannerUrl, setBannerUrl] = useState("");
   const [userId, setUserId] = useState("");
+  const [bio, setBio] = useState("");
 
   useEffect(() => {
     fetchUserData();
@@ -34,7 +36,7 @@ const Settings = () => {
       
       const { data: profile } = await supabase
         .from("profiles")
-        .select("username, avatar_url, banner_url")
+        .select("username, avatar_url, banner_url, bio")
         .eq("id", user.id)
         .single();
       
@@ -42,6 +44,7 @@ const Settings = () => {
         setUsername(profile.username);
         setAvatarUrl(profile.avatar_url || "");
         setBannerUrl(profile.banner_url || "");
+        setBio(profile.bio || "");
       }
     }
   };
@@ -171,6 +174,45 @@ const Settings = () => {
     setLoading(false);
   };
 
+  const handleUpdateBio = async () => {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ bio })
+        .eq("id", user.id);
+      
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Bio updated successfully");
+      }
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!confirm("Are you sure you want to delete your account? This action cannot be undone and will delete all your posts, comments, and other data.")) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.rpc("delete_user_account");
+      
+      if (error) throw error;
+      
+      await supabase.auth.signOut();
+      toast.success("Account deleted successfully");
+      navigate("/auth");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete account");
+    }
+    setLoading(false);
+  };
+
   const handleUpdatePassword = async () => {
     if (newPassword !== confirmPassword) {
       toast.error("Passwords do not match");
@@ -282,6 +324,49 @@ const Settings = () => {
 
         <Card>
           <CardHeader>
+            <CardTitle>Username</CardTitle>
+            <CardDescription>Change your username</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </div>
+            <Button onClick={handleUpdateUsername} disabled={loading}>
+              Update Username
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Bio</CardTitle>
+            <CardDescription>Update your bio/description</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="bio">Bio</Label>
+              <Textarea
+                id="bio"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Tell us about yourself..."
+                rows={4}
+              />
+            </div>
+            <Button onClick={handleUpdateBio} disabled={loading}>
+              Update Bio
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Email</CardTitle>
             <CardDescription>Update your email address</CardDescription>
           </CardHeader>
@@ -370,6 +455,22 @@ const Settings = () => {
             </div>
             <Button onClick={handleUpdatePassword} disabled={loading}>
               Update Password
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-destructive">Danger Zone</CardTitle>
+            <CardDescription>Permanently delete your account and all data</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteAccount} 
+              disabled={loading}
+            >
+              Delete Account
             </Button>
           </CardContent>
         </Card>
