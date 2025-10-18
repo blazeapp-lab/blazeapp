@@ -53,44 +53,54 @@ const FollowersDialog = ({
 
   const fetchFollowers = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: followData, error } = await supabase
         .from("follows")
-        .select(`
-          follower_id,
-          profiles:follower_id (
-            id,
-            username,
-            display_name,
-            avatar_url
-          )
-        `)
+        .select("follower_id")
         .eq("following_id", userId);
 
       if (error) throw error;
-      setFollowers(data.map((f: any) => f.profiles).filter(Boolean));
+      
+      if (followData && followData.length > 0) {
+        const followerIds = followData.map(f => f.follower_id);
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, username, display_name, avatar_url")
+          .in("id", followerIds);
+        
+        if (profilesError) throw profilesError;
+        setFollowers(profilesData || []);
+      } else {
+        setFollowers([]);
+      }
     } catch (error) {
+      console.error("Error fetching followers:", error);
       toast.error("Failed to load followers");
     }
   };
 
   const fetchFollowing = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: followData, error } = await supabase
         .from("follows")
-        .select(`
-          following_id,
-          profiles:following_id (
-            id,
-            username,
-            display_name,
-            avatar_url
-          )
-        `)
+        .select("following_id")
         .eq("follower_id", userId);
 
       if (error) throw error;
-      setFollowing(data.map((f: any) => f.profiles).filter(Boolean));
+      
+      if (followData && followData.length > 0) {
+        const followingIds = followData.map(f => f.following_id);
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, username, display_name, avatar_url")
+          .in("id", followingIds);
+        
+        if (profilesError) throw profilesError;
+        setFollowing(profilesData || []);
+      } else {
+        setFollowing([]);
+      }
     } catch (error) {
+      console.error("Error fetching following:", error);
       toast.error("Failed to load following");
     } finally {
       setLoading(false);
