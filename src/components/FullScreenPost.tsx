@@ -99,46 +99,46 @@ const FullScreenPost = ({
             <Button
               variant="ghost"
               size="sm"
-              className="gap-2"
+              className="gap-1.5"
               onClick={onLike}
             >
               <Heart
-                className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+                className={`h-3.5 w-3.5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
               />
-              <span>{post.likes_count}</span>
+              <span className="text-sm">{post.likes_count}</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="gap-2"
+              className="gap-1.5"
               onClick={onBrokenHeart}
             >
               <ThumbsDown
-                className={`h-5 w-5 ${isBrokenHearted ? "fill-blue-500 text-blue-500" : ""}`}
+                className={`h-3.5 w-3.5 ${isBrokenHearted ? "fill-blue-500 text-blue-500" : ""}`}
               />
-              <span>{post.broken_hearts_count}</span>
+              <span className="text-sm">{post.broken_hearts_count}</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="gap-2"
+              className="gap-1.5"
             >
-              <MessageCircle className="h-5 w-5" />
-              <span>{post.comments_count}</span>
+              <MessageCircle className="h-3.5 w-3.5" />
+              <span className="text-sm">{post.comments_count}</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="gap-2"
+              className="gap-1.5"
               onClick={onRepost}
             >
               <Repeat2
-                className={`h-5 w-5 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
+                className={`h-3.5 w-3.5 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
               />
-              <span>{post.reposts_count}</span>
+              <span className="text-sm">{post.reposts_count}</span>
             </Button>
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <Eye className="h-5 w-5" />
+            <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+              <Eye className="h-3.5 w-3.5" />
               <span>{post.views_count}</span>
             </div>
           </div>
