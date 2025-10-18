@@ -40,38 +40,81 @@ const Notifications = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from("notifications")
-      .select(`
-        id,
-        type,
-        created_at,
-        is_read,
-        post_id,
-        comment_id,
-        actor:profiles!notifications_actor_id_fkey (
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select(`
           id,
-          username,
-          display_name,
-          avatar_url
-        ),
-        post:posts!notifications_post_id_fkey (
-          content,
-          image_url
-        )
-      `)
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(50);
+          type,
+          created_at,
+          is_read,
+          post_id,
+          comment_id,
+          actor:profiles!notifications_actor_id_fkey (
+            id,
+            username,
+            display_name,
+            avatar_url
+          ),
+          post:posts!notifications_post_id_fkey (
+            content,
+            image_url
+          )
+        `)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
 
-    if (error) {
-      toast.error("Failed to fetch notifications");
-    } else {
+      if (error) throw error;
+
       setNotifications(data as any);
-    }
-    setLoading(false);
-  };
+    } catch (err) {
+      // Fallback without embeddings if FK-based embedding fails
+      const { data: base, error: baseErr } = await supabase
+        .from("notifications")
+        .select("id,type,created_at,is_read,post_id,comment_id,actor_id")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
 
+      if (baseErr || !base) {
+        toast.error("Failed to fetch notifications");
+      } else {
+        const actorIds = Array.from(new Set(base.map((n: any) => n.actor_id).filter(Boolean)));
+        const postIds = Array.from(new Set(base.map((n: any) => n.post_id).filter(Boolean)));
+
+        const [actorsRes, postsRes] = await Promise.all([
+          actorIds.length
+            ? supabase.from("profiles").select("id,username,display_name,avatar_url").in("id", actorIds)
+            : Promise.resolve({ data: [], error: null } as any),
+          postIds.length
+            ? supabase.from("posts").select("id,content,image_url").in("id", postIds)
+            : Promise.resolve({ data: [], error: null } as any),
+        ]);
+
+        const actors = (actorsRes as any).data || [];
+        const posts = (postsRes as any).data || [];
+        const actorMap: Record<string, any> = Object.fromEntries(actors.map((a: any) => [a.id, a]));
+        const postMap: Record<string, any> = Object.fromEntries(posts.map((p: any) => [p.id, p]));
+
+        const merged = (base as any[]).map((n: any) => ({
+          id: n.id,
+          type: n.type,
+          created_at: n.created_at,
+          is_read: n.is_read,
+          post_id: n.post_id,
+          comment_id: n.comment_id,
+          actor: n.actor_id ? actorMap[n.actor_id] || null : null,
+          post: n.post_id ? postMap[n.post_id] || null : null,
+        }));
+
+        setNotifications(merged as any);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
   const markAsRead = async (notificationId: string) => {
     const { error } = await supabase
       .from("notifications")
