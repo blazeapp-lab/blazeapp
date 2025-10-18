@@ -27,6 +27,26 @@ const Home = ({ currentUserId }: HomeProps) => {
       window.removeEventListener("blaze:refresh-feed", onRefresh);
     };
   }, [currentUserId]);
+
+  // Also refetch on focus/visibility if a refresh flag was set while away
+  useEffect(() => {
+    const maybeRefresh = () => {
+      if (sessionStorage.getItem("blaze:refresh-feed")) {
+        sessionStorage.removeItem("blaze:refresh-feed");
+        fetchPosts();
+      }
+    };
+    window.addEventListener("focus", maybeRefresh);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") maybeRefresh();
+    });
+    // Run once on mount
+    maybeRefresh();
+    return () => {
+      window.removeEventListener("focus", maybeRefresh);
+      document.removeEventListener("visibilitychange", maybeRefresh as any);
+    };
+  }, [currentUserId]);
   const fetchPosts = async () => {
     try {
       if (!currentUserId) {

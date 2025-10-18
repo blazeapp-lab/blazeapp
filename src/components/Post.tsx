@@ -154,6 +154,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           .eq("user_id", currentUserId);
         setIsLiked(false);
         setLikesCount((prev) => Math.max(0, prev - 1));
+        sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
         // If user has disliked, remove the dislike first
@@ -172,6 +173,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         });
         setIsLiked(true);
         setLikesCount((prev) => prev + 1);
+        sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       }
     } catch (error: any) {
@@ -189,6 +191,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
       if (error) throw error;
 
       toast.success("Post deleted successfully");
+      sessionStorage.setItem("blaze:refresh-feed", "1");
       window.dispatchEvent(new Event("blaze:refresh-feed"));
       setShowDeleteDialog(false);
       onPostDeleted?.();
@@ -215,6 +218,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
       toast.success("Post updated successfully");
       setShowEditDialog(false);
       onPostDeleted?.(); // Refresh the posts
+      sessionStorage.setItem("blaze:refresh-feed", "1");
       window.dispatchEvent(new Event("blaze:refresh-feed"));
     } catch (error: any) {
       toast.error("Failed to update post");
@@ -238,6 +242,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           .eq("user_id", currentUserId);
         setIsBrokenHearted(false);
         setBrokenHeartsCount((prev) => Math.max(0, prev - 1));
+        sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
         // If user has liked, remove the like first
@@ -256,6 +261,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         });
         setIsBrokenHearted(true);
         setBrokenHeartsCount((prev) => prev + 1);
+        sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       }
     } catch (error: any) {
@@ -279,6 +285,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         setIsReposted(false);
         setRepostsCount((prev) => Math.max(0, prev - 1));
         toast.success("Repost removed");
+        sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
         await supabase.from("reposts").insert({
@@ -288,6 +295,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         setIsReposted(true);
         setRepostsCount((prev) => prev + 1);
         toast.success("Reposted!");
+        sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       }
     } catch (error: any) {
