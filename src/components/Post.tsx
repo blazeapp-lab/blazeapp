@@ -44,6 +44,7 @@ interface PostProps {
     reposts_count: number;
     views_count: number;
     created_at: string;
+    updated_at: string;
     user_id: string;
     profiles: {
       id: string;
@@ -342,6 +343,12 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
               <span className="text-sm text-muted-foreground">
                 {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
               </span>
+              {post.updated_at !== post.created_at && (
+                <>
+                  <span className="text-sm text-muted-foreground">·</span>
+                  <span className="text-sm text-muted-foreground italic">edited</span>
+                </>
+              )}
               <div className="ml-auto flex gap-2">
                 <Button
                   variant="ghost"

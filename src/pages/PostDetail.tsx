@@ -384,6 +384,9 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
             </div>
             <span className="text-muted-foreground text-sm">
               {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+              {post.updated_at !== post.created_at && (
+                <span className="italic ml-1">(edited)</span>
+              )}
             </span>
             <p className="mt-3 text-lg whitespace-pre-wrap break-words">{post.content}</p>
             {post.image_url && (
