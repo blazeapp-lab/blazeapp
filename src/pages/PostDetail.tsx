@@ -56,7 +56,18 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
     }
   }, [postId, currentUserId]);
 
-  // Removed real-time counter updates to prevent race conditions with optimistic updates
+  useEffect(() => {
+    const handlePostUpdate = (e: CustomEvent<any>) => {
+      if (e.detail.postId === postId) {
+        if (e.detail.comments_count !== undefined) {
+          setCommentsCount(e.detail.comments_count);
+        }
+      }
+    };
+    
+    window.addEventListener('blaze:update-post', handlePostUpdate as EventListener);
+    return () => window.removeEventListener('blaze:update-post', handlePostUpdate as EventListener);
+  }, [postId]);
 
   const fetchPost = async () => {
     try {

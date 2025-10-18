@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, User, Heart, Trash2, Edit } from "lucide-react";
 import { z } from "zod";
+import { emitPostUpdate } from "@/lib/postEvents";
 
 const commentSchema = z.object({
   content: z.string()
@@ -108,6 +109,17 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
       setNewComment("");
       setReplyingTo(null);
       await fetchComments();
+      
+      // Update comment count
+      const { data: postData } = await supabase
+        .from("posts")
+        .select("comments_count")
+        .eq("id", postId)
+        .single();
+      
+      if (postData) {
+        emitPostUpdate({ postId, comments_count: postData.comments_count });
+      }
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
@@ -165,6 +177,17 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
 
       toast.success("Comment deleted");
       await fetchComments();
+      
+      // Update comment count
+      const { data: postData } = await supabase
+        .from("posts")
+        .select("comments_count")
+        .eq("id", postId)
+        .single();
+      
+      if (postData) {
+        emitPostUpdate({ postId, comments_count: postData.comments_count });
+      }
     } catch (error: any) {
       toast.error("Failed to delete comment");
     }
