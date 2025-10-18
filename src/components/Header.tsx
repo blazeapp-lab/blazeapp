@@ -59,6 +59,28 @@ const Header = ({ userId }: HeaderProps) => {
     navigate("/auth");
   };
 
+  // If user is not logged in, show simplified header
+  if (!userId) {
+    return (
+      <header className="w-full border-b border-border bg-card sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate("/")}
+              className="hover:opacity-80 transition-opacity"
+            >
+              <img src={blazeLogo} alt="Blaze" className="h-10 w-10" />
+            </button>
+            
+            <Button onClick={() => navigate("/auth")}>
+              Sign in to post
+            </Button>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   const navItems = [
     { icon: Home, label: "Home", path: "/" },
     { icon: SearchIcon, label: "Search", path: "/search" },
