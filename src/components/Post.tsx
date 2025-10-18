@@ -422,37 +422,45 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
             />
             <span>{formatNumber(brokenHeartsCount)}</span>
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-2"
-                onClick={(e) => {
-                  if (!currentUserId) {
-                    e.preventDefault();
-                    toast.error("Please sign in to repost");
-                    navigate("/auth");
-                  }
-                }}
-              >
-                <Repeat2
-                  className={`h-5 w-5 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
-                />
-                <span>{formatNumber(repostsCount)}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={handleRepost}>
-                <Repeat2 className="h-4 w-4 mr-2" />
-                {isReposted ? "Undo Repost" : "Repost"}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowQuoteDialog(true)}>
-                <Quote className="h-4 w-4 mr-2" />
-                Quote Post
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {currentUserId ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Repeat2
+                    className={`h-5 w-5 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
+                  />
+                  <span>{formatNumber(repostsCount)}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleRepost}>
+                  <Repeat2 className="h-4 w-4 mr-2" />
+                  {isReposted ? "Undo Repost" : "Repost"}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowQuoteDialog(true)}>
+                  <Quote className="h-4 w-4 mr-2" />
+                  Quote Post
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                toast.error("Please sign in to repost");
+                navigate("/auth");
+              }}
+            >
+              <Repeat2 className="h-5 w-5" />
+              <span>{formatNumber(repostsCount)}</span>
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
