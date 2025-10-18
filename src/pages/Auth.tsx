@@ -5,16 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
 
-const loginSchema = z.object({
+const emailLoginSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }).max(255, { message: "Email too long" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(72, { message: "Password too long" }),
 });
 
-const signupSchema = loginSchema.extend({
+const phoneLoginSchema = z.object({
+  phone: z.string().trim().min(10, { message: "Invalid phone number" }).max(20, { message: "Phone number too long" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(72, { message: "Password too long" }),
+});
+
+const emailSignupSchema = emailLoginSchema.extend({
+  username: z.string().trim().min(1, { message: "Username is required" }).max(16, { message: "Username must be 16 characters or less" }).regex(/^[a-zA-Z0-9_.]+$/, { message: "Username can only contain letters, numbers, underscores, and periods" }),
+  displayName: z.string().trim().min(1, { message: "Display name is required" }).max(50, { message: "Display name too long" }),
+});
+
+const phoneSignupSchema = phoneLoginSchema.extend({
   username: z.string().trim().min(1, { message: "Username is required" }).max(16, { message: "Username must be 16 characters or less" }).regex(/^[a-zA-Z0-9_.]+$/, { message: "Username can only contain letters, numbers, underscores, and periods" }),
   displayName: z.string().trim().min(1, { message: "Display name is required" }).max(50, { message: "Display name too long" }),
 });
@@ -22,8 +33,10 @@ const signupSchema = loginSchema.extend({
 const Auth = () => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+  const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -44,28 +57,52 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const validatedData = loginSchema.parse({ email, password });
-        const { error } = await supabase.auth.signInWithPassword({
-          email: validatedData.email,
-          password: validatedData.password,
-        });
-        if (error) throw error;
+        if (authMethod === "email") {
+          const validatedData = emailLoginSchema.parse({ email, password });
+          const { error } = await supabase.auth.signInWithPassword({
+            email: validatedData.email,
+            password: validatedData.password,
+          });
+          if (error) throw error;
+        } else {
+          const validatedData = phoneLoginSchema.parse({ phone, password });
+          const { error } = await supabase.auth.signInWithPassword({
+            phone: validatedData.phone,
+            password: validatedData.password,
+          });
+          if (error) throw error;
+        }
         toast.success("Welcome back!");
         navigate("/");
       } else {
-        const validatedData = signupSchema.parse({ email, password, username, displayName });
-        const { error } = await supabase.auth.signUp({
-          email: validatedData.email,
-          password: validatedData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              username: validatedData.username,
-              display_name: validatedData.displayName,
+        if (authMethod === "email") {
+          const validatedData = emailSignupSchema.parse({ email, password, username, displayName });
+          const { error } = await supabase.auth.signUp({
+            email: validatedData.email,
+            password: validatedData.password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/`,
+              data: {
+                username: validatedData.username,
+                display_name: validatedData.displayName,
+              },
             },
-          },
-        });
-        if (error) throw error;
+          });
+          if (error) throw error;
+        } else {
+          const validatedData = phoneSignupSchema.parse({ phone, password, username, displayName });
+          const { error } = await supabase.auth.signUp({
+            phone: validatedData.phone,
+            password: validatedData.password,
+            options: {
+              data: {
+                username: validatedData.username,
+                display_name: validatedData.displayName,
+              },
+            },
+          });
+          if (error) throw error;
+        }
         toast.success("Account created! Welcome to Blaze!");
         navigate("/");
       }
@@ -96,6 +133,13 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <Tabs value={authMethod} onValueChange={(v) => setAuthMethod(v as "email" | "phone")} className="w-full mb-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="email">Email</TabsTrigger>
+              <TabsTrigger value="phone">Phone</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
           <form onSubmit={handleAuth} className="space-y-4">
             {!isLogin && (
               <>
@@ -125,17 +169,34 @@ const Auth = () => {
                 </div>
               </>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+            {authMethod === "email" ? (
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="+1234567890"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Include country code (e.g., +1 for US)
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
