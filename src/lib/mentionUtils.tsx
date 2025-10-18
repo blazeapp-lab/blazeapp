@@ -1,18 +1,28 @@
 import { Link } from "react-router-dom";
 
+// HTML entity escape function to prevent XSS
+const escapeHtml = (text: string): string => {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+};
+
 export const parseMentions = (content: string) => {
+  // Sanitize content first to prevent XSS
+  const sanitizedContent = escapeHtml(content);
+  
   const mentionRegex = /@(\w+)/g;
   const parts: (string | JSX.Element)[] = [];
   let lastIndex = 0;
   let match;
 
-  while ((match = mentionRegex.exec(content)) !== null) {
+  while ((match = mentionRegex.exec(sanitizedContent)) !== null) {
     // Add text before mention
     if (match.index > lastIndex) {
-      parts.push(content.substring(lastIndex, match.index));
+      parts.push(sanitizedContent.substring(lastIndex, match.index));
     }
 
-    // Add mention as link
+    // Add mention as link - username is already sanitized
     const username = match[1];
     parts.push(
       <Link
@@ -29,9 +39,9 @@ export const parseMentions = (content: string) => {
   }
 
   // Add remaining text
-  if (lastIndex < content.length) {
-    parts.push(content.substring(lastIndex));
+  if (lastIndex < sanitizedContent.length) {
+    parts.push(sanitizedContent.substring(lastIndex));
   }
 
-  return parts.length > 0 ? parts : [content];
+  return parts.length > 0 ? parts : [sanitizedContent];
 };
