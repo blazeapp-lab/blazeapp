@@ -8,6 +8,7 @@ import { Heart, MessageCircle, User, Repeat2, Eye, ThumbsDown, ArrowLeft, Share2
 import { formatDistanceToNow } from "date-fns";
 import CommentSection from "@/components/CommentSection";
 import { toast } from "sonner";
+import { formatNumber } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -405,7 +406,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-6 pt-4 border-t">
+        <div className="flex items-center gap-4 pt-4 border-t">
           <Button
             variant="ghost"
             size="sm"
@@ -415,7 +416,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
             <Heart
               className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
             />
-            <span>{likesCount}</span>
+            <span>{formatNumber(likesCount)}</span>
           </Button>
           <Button
             variant="ghost"
@@ -426,7 +427,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
             <ThumbsDown
               className={`h-5 w-5 ${isBrokenHearted ? "fill-blue-500 text-blue-500" : ""}`}
             />
-            <span>{brokenHeartsCount}</span>
+            <span>{formatNumber(brokenHeartsCount)}</span>
           </Button>
           <Button
             variant="ghost"
@@ -437,7 +438,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
             <Repeat2
               className={`h-5 w-5 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
             />
-            <span>{repostsCount}</span>
+            <span>{formatNumber(repostsCount)}</span>
           </Button>
           <Button
             variant="ghost"
@@ -445,11 +446,11 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
             className="gap-2"
           >
             <MessageCircle className="h-5 w-5" />
-            <span>{post.comments_count}</span>
+            <span>{formatNumber(post.comments_count)}</span>
           </Button>
           <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <Eye className="h-5 w-5" />
-            <span>{viewsCount}</span>
+            <span>{formatNumber(viewsCount)}</span>
           </div>
         </div>
 
