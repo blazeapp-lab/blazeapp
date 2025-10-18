@@ -187,6 +187,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           .eq("post_id", postId)
           .eq("user_id", currentUserId);
         setIsLiked(false);
+        setLikesCount((prev) => Math.max(0, prev - 1));
       } else {
         if (isBrokenHearted) {
           await supabase
@@ -195,13 +196,14 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
             .eq("post_id", postId)
             .eq("user_id", currentUserId);
           setIsBrokenHearted(false);
+          setBrokenHeartsCount((prev) => Math.max(0, prev - 1));
         }
-        
         await supabase.from("likes").insert({
           post_id: postId,
           user_id: currentUserId,
         });
         setIsLiked(true);
+        setLikesCount((prev) => prev + 1);
       }
     } catch (error: any) {
       toast.error("Failed to update like");
@@ -222,6 +224,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           .eq("post_id", postId)
           .eq("user_id", currentUserId);
         setIsBrokenHearted(false);
+        setBrokenHeartsCount((prev) => Math.max(0, prev - 1));
       } else {
         if (isLiked) {
           await supabase
@@ -230,13 +233,14 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
             .eq("post_id", postId)
             .eq("user_id", currentUserId);
           setIsLiked(false);
+          setLikesCount((prev) => Math.max(0, prev - 1));
         }
-        
         await supabase.from("broken_hearts").insert({
           post_id: postId,
           user_id: currentUserId,
         });
         setIsBrokenHearted(true);
+        setBrokenHeartsCount((prev) => prev + 1);
       }
     } catch (error: any) {
       toast.error("Failed to update reaction");
@@ -257,6 +261,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           .eq("post_id", postId)
           .eq("user_id", currentUserId);
         setIsReposted(false);
+        setRepostsCount((prev) => Math.max(0, prev - 1));
         toast.success("Repost removed");
       } else {
         await supabase.from("reposts").insert({
@@ -264,6 +269,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           user_id: currentUserId,
         });
         setIsReposted(true);
+        setRepostsCount((prev) => prev + 1);
         toast.success("Reposted!");
       }
     } catch (error: any) {
