@@ -333,7 +333,6 @@ export type Database = {
           id: string
           image_url: string | null
           likes_count: number
-          quoted_post_id: string | null
           reposts_count: number
           updated_at: string
           user_id: string
@@ -347,7 +346,6 @@ export type Database = {
           id?: string
           image_url?: string | null
           likes_count?: number
-          quoted_post_id?: string | null
           reposts_count?: number
           updated_at?: string
           user_id: string
@@ -361,20 +359,12 @@ export type Database = {
           id?: string
           image_url?: string | null
           likes_count?: number
-          quoted_post_id?: string | null
           reposts_count?: number
           updated_at?: string
           user_id?: string
           views_count?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "posts_quoted_post_id_fkey"
-            columns: ["quoted_post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "posts_user_id_fkey"
             columns: ["user_id"]

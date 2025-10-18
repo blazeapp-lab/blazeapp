@@ -43,30 +43,7 @@ const Home = ({ currentUserId }: HomeProps) => {
 
         if (error) throw error;
         
-        // Fetch quoted posts separately
-        const postsWithQuotes = await Promise.all((data || []).map(async (post) => {
-          if (post.quoted_post_id) {
-            const { data: quotedPost } = await supabase
-              .from("posts")
-              .select(`
-                id,
-                content,
-                image_url,
-                created_at,
-                profiles (
-                  id,
-                  username,
-                  display_name,
-                  avatar_url
-                )
-              `)
-              .eq("id", post.quoted_post_id)
-              .maybeSingle();
-            return { ...post, quoted_post: quotedPost };
-          }
-          return post;
-        }));
-        setPosts(postsWithQuotes);
+        setPosts(data || []);
         return;
       }
 
@@ -101,29 +78,7 @@ const Home = ({ currentUserId }: HomeProps) => {
           .order("created_at", { ascending: false })
           .limit(25);
         
-        // Fetch quoted posts for followed posts
-        followedPosts = await Promise.all((data || []).map(async (post) => {
-          if (post.quoted_post_id) {
-            const { data: quotedPost } = await supabase
-              .from("posts")
-              .select(`
-                id,
-                content,
-                image_url,
-                created_at,
-                profiles (
-                  id,
-                  username,
-                  display_name,
-                  avatar_url
-                )
-              `)
-              .eq("id", post.quoted_post_id)
-              .maybeSingle();
-            return { ...post, quoted_post: quotedPost };
-          }
-          return post;
-        }));
+        followedPosts = data || [];
       }
 
       // Fetch trending posts from this week (high engagement)
@@ -146,31 +101,8 @@ const Home = ({ currentUserId }: HomeProps) => {
         .order("likes_count", { ascending: false })
         .limit(30);
 
-      // Fetch quoted posts for trending posts
-      let trendingPosts = await Promise.all((trendingData || []).map(async (post) => {
-        if (post.quoted_post_id) {
-          const { data: quotedPost } = await supabase
-            .from("posts")
-            .select(`
-              id,
-              content,
-              image_url,
-              created_at,
-              profiles (
-                id,
-                username,
-                display_name,
-                avatar_url
-              )
-            `)
-            .eq("id", post.quoted_post_id)
-            .maybeSingle();
-          return { ...post, quoted_post: quotedPost };
-        }
-        return post;
-      }));
-      
       // Filter trending posts for privacy
+      let trendingPosts = trendingData || [];
       trendingPosts = trendingPosts.filter(post => 
         !post.profiles.is_private || 
         post.user_id === currentUserId ||
