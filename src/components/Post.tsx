@@ -383,46 +383,46 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
                   <span className="text-sm text-muted-foreground italic">edited</span>
                 </>
               )}
-              <div className="ml-auto flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleShare}
-                >
-                  <Share2 className="h-4 w-4" />
-                </Button>
-                {currentUserId === post.user_id && (
-                  <>
-                    {showPinButton && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onPin}
-                        title={isPinned ? "Unpin post" : "Pin post"}
-                      >
-                        <Pin className={`h-4 w-4 ${isPinned ? "fill-current" : ""}`} />
-                      </Button>
-                    )}
+            </div>
+            <div className="flex gap-2 mt-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleShare}
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+              {currentUserId === post.user_id && (
+                <>
+                  {showPinButton && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        setEditContent(post.content);
-                        setShowEditDialog(true);
-                      }}
+                      onClick={onPin}
+                      title={isPinned ? "Unpin post" : "Pin post"}
                     >
-                      <Edit className="h-4 w-4" />
+                      <Pin className={`h-4 w-4 ${isPinned ? "fill-current" : ""}`} />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowDeleteDialog(true)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </>
-                )}
-              </div>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setEditContent(post.content);
+                      setShowEditDialog(true);
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowDeleteDialog(true)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </>
+              )}
             </div>
             <p className="mt-2 whitespace-pre-wrap break-words">
               {parseMentions(post.content)}
