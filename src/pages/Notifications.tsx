@@ -45,7 +45,7 @@ const Notifications = () => {
         is_read,
         post_id,
         comment_id,
-        actor:actor_id (
+        actor:profiles!notifications_actor_id_fkey (
           id,
           username,
           display_name,
