@@ -61,8 +61,8 @@ const Header = ({ userId }: HeaderProps) => {
 
   return (
     <header className="w-full border-b border-border bg-card sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
+        <div className="flex items-center justify-between gap-2">
           <button
             onClick={() => navigate("/")}
             className="hover:opacity-80 transition-opacity"
@@ -70,13 +70,14 @@ const Header = ({ userId }: HeaderProps) => {
             <img src={blazeLogo} alt="Blaze" className="h-10 w-10" />
           </button>
           
-          <nav className="flex items-center gap-1">
+          <nav className="flex items-center gap-0.5 sm:gap-1">
             {userId ? (
               <>
                 <Button
                   variant={location.pathname === "/" ? "secondary" : "ghost"}
                   size="sm"
                   onClick={() => navigate("/")}
+                  className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                 >
                   <Home className="h-4 w-4" />
                 </Button>
@@ -85,6 +86,7 @@ const Header = ({ userId }: HeaderProps) => {
                   variant={location.pathname === "/search" ? "secondary" : "ghost"}
                   size="sm"
                   onClick={() => navigate("/search")}
+                  className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                 >
                   <SearchIcon className="h-4 w-4" />
                 </Button>
@@ -93,13 +95,13 @@ const Header = ({ userId }: HeaderProps) => {
                   variant={location.pathname === "/notifications" ? "secondary" : "ghost"}
                   size="sm"
                   onClick={() => navigate("/notifications")}
-                  className="relative"
+                  className="relative h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                 >
                   <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
                     <Badge 
                       variant="destructive" 
-                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                      className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 text-[10px] sm:text-xs"
                     >
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </Badge>
@@ -110,6 +112,7 @@ const Header = ({ userId }: HeaderProps) => {
                   variant={location.pathname === `/profile/${userId}` ? "secondary" : "ghost"}
                   size="sm"
                   onClick={() => navigate(`/profile/${userId}`)}
+                  className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                 >
                   <User className="h-4 w-4" />
                 </Button>
@@ -121,6 +124,7 @@ const Header = ({ userId }: HeaderProps) => {
                     const createPostBtn = document.getElementById("create-post-trigger");
                     createPostBtn?.click();
                   }}
+                  className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                 >
                   <PenSquare className="h-4 w-4" />
                 </Button>
@@ -129,6 +133,7 @@ const Header = ({ userId }: HeaderProps) => {
                   variant="ghost"
                   size="sm"
                   onClick={handleLogout}
+                  className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                 >
                   <LogOut className="h-4 w-4" />
                 </Button>
@@ -139,6 +144,7 @@ const Header = ({ userId }: HeaderProps) => {
                   variant={location.pathname === "/search" ? "secondary" : "ghost"}
                   size="sm"
                   onClick={() => navigate("/search")}
+                  className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                 >
                   <SearchIcon className="h-4 w-4" />
                 </Button>
@@ -147,8 +153,9 @@ const Header = ({ userId }: HeaderProps) => {
                   variant="default"
                   size="sm"
                   onClick={() => navigate("/auth")}
+                  className="h-8 px-3 text-xs sm:h-9 sm:px-4 sm:text-sm"
                 >
-                  Sign in to post
+                  Sign in
                 </Button>
               </>
             )}

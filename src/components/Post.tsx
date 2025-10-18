@@ -444,28 +444,28 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           </div>
         </div>
         
-        <div className="flex items-center gap-3 pt-2">
+        <div className="flex items-center justify-between sm:justify-start sm:gap-3 pt-2">
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2"
+            className="gap-1 h-8 px-2 min-w-0"
             onClick={handleLike}
           >
             <Heart
-              className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+              className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
             />
-            <span>{formatNumber(likesCount)}</span>
+            <span className="text-xs sm:text-sm">{formatNumber(likesCount)}</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2"
+            className="gap-1 h-8 px-2 min-w-0"
             onClick={handleBrokenHeart}
           >
             <ThumbsDown
-              className={`h-5 w-5 ${isBrokenHearted ? "fill-blue-500 text-blue-500" : ""}`}
+              className={`h-4 w-4 ${isBrokenHearted ? "fill-blue-500 text-blue-500" : ""}`}
             />
-            <span>{formatNumber(brokenHeartsCount)}</span>
+            <span className="text-xs sm:text-sm">{formatNumber(brokenHeartsCount)}</span>
           </Button>
           {currentUserId ? (
             <DropdownMenu>
@@ -473,12 +473,12 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="gap-2"
+                  className="gap-1 h-8 px-2 min-w-0"
                 >
                   <Repeat2
-                    className={`h-5 w-5 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
+                    className={`h-4 w-4 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
                   />
-                  <span>{formatNumber(repostsCount)}</span>
+                  <span className="text-xs sm:text-sm">{formatNumber(repostsCount)}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -492,27 +492,27 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
             <Button
               variant="ghost"
               size="sm"
-              className="gap-2"
+              className="gap-1 h-8 px-2 min-w-0"
               onClick={() => {
                 toast.error("Please sign in to repost");
                 navigate("/auth");
               }}
             >
-              <Repeat2 className="h-5 w-5" />
-              <span>{formatNumber(repostsCount)}</span>
+              <Repeat2 className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">{formatNumber(repostsCount)}</span>
             </Button>
           )}
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2"
+            className="gap-1 h-8 px-2 min-w-0"
             onClick={handleCommentClick}
           >
-            <MessageCircle className="h-5 w-5" />
-            <span>{formatNumber(post.comments_count)}</span>
+            <MessageCircle className="h-4 w-4" />
+            <span className="text-xs sm:text-sm">{formatNumber(post.comments_count)}</span>
           </Button>
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <Eye className="h-5 w-5" />
+          <div className="flex items-center gap-1 text-muted-foreground text-xs sm:text-sm px-2">
+            <Eye className="h-4 w-4" />
             <span>{formatNumber(viewsCount)}</span>
           </div>
         </div>
