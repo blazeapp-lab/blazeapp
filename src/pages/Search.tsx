@@ -62,7 +62,7 @@ const Search = ({ currentUserId }: SearchProps) => {
 
       if (postError) throw postError;
       
-      // Filter out posts from private accounts unless user is following them
+      // Filter out posts from private accounts and blocked users
       let filteredPosts = postData || [];
       if (currentUserId) {
         const { data: followingData } = await supabase
@@ -72,11 +72,27 @@ const Search = ({ currentUserId }: SearchProps) => {
         
         const followingIds = followingData?.map(f => f.following_id) || [];
         
-        filteredPosts = filteredPosts.filter(post => 
-          !post.profiles.is_private || 
-          post.user_id === currentUserId ||
-          followingIds.includes(post.user_id)
-        );
+        // Get blocked users
+        const { data: blockedData } = await supabase
+          .from("blocks")
+          .select("blocked_id")
+          .eq("blocker_id", currentUserId);
+        
+        const { data: blockerData } = await supabase
+          .from("blocks")
+          .select("blocker_id")
+          .eq("blocked_id", currentUserId);
+        
+        const blockedIds = new Set(blockedData?.map(b => b.blocked_id) || []);
+        const blockerIds = new Set(blockerData?.map(b => b.blocker_id) || []);
+        
+        filteredPosts = filteredPosts.filter(post => {
+          if (blockedIds.has(post.user_id) || blockerIds.has(post.user_id)) return false;
+          
+          if (!post.profiles.is_private) return true;
+          if (post.user_id === currentUserId) return true;
+          return followingIds.includes(post.user_id);
+        });
       } else {
         filteredPosts = filteredPosts.filter(post => !post.profiles.is_private);
       }
@@ -121,7 +137,7 @@ const Search = ({ currentUserId }: SearchProps) => {
 
         if (error) throw error;
         
-        // Filter out posts from private accounts unless user is following them
+        // Filter out posts from private accounts and blocked users
         let filteredPosts = data || [];
         if (currentUserId) {
           const { data: followingData } = await supabase
@@ -131,11 +147,27 @@ const Search = ({ currentUserId }: SearchProps) => {
           
           const followingIds = followingData?.map(f => f.following_id) || [];
           
-          filteredPosts = filteredPosts.filter(post => 
-            !post.profiles.is_private || 
-            post.user_id === currentUserId ||
-            followingIds.includes(post.user_id)
-          );
+          // Get blocked users
+          const { data: blockedData } = await supabase
+            .from("blocks")
+            .select("blocked_id")
+            .eq("blocker_id", currentUserId);
+          
+          const { data: blockerData } = await supabase
+            .from("blocks")
+            .select("blocker_id")
+            .eq("blocked_id", currentUserId);
+          
+          const blockedIds = new Set(blockedData?.map(b => b.blocked_id) || []);
+          const blockerIds = new Set(blockerData?.map(b => b.blocker_id) || []);
+          
+          filteredPosts = filteredPosts.filter(post => {
+            if (blockedIds.has(post.user_id) || blockerIds.has(post.user_id)) return false;
+            
+            if (!post.profiles.is_private) return true;
+            if (post.user_id === currentUserId) return true;
+            return followingIds.includes(post.user_id);
+          });
         } else {
           filteredPosts = filteredPosts.filter(post => !post.profiles.is_private);
         }
