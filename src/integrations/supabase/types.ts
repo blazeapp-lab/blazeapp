@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       broken_hearts: {
         Row: {
           created_at: string
@@ -342,6 +363,10 @@ export type Database = {
       delete_user_account: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      is_blocked: {
+        Args: { owner_id: string; viewer_id: string }
+        Returns: boolean
       }
     }
     Enums: {

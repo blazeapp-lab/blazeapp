@@ -83,8 +83,8 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   };
 
   const fetchUserPosts = async () => {
-    // Check if current user is blocked by the profile owner
-    if (isBlockedByUser) {
+    // Blocked users (either direction) cannot view posts
+    if (isBlockedByUser || isBlocked) {
       setPosts([]);
       setCanViewPosts(false);
       return;
@@ -209,18 +209,16 @@ const Profile = ({ currentUserId }: ProfileProps) => {
       }
       setIsBlocked(!!blockedData);
 
-      // Check if current user is blocked BY this profile
-      const { data: blockedByData, error: blockedByError } = await (supabase as any)
-        .from("blocks")
-        .select("id")
-        .eq("blocker_id", userId)
-        .eq("blocked_id", currentUserId)
-        .maybeSingle();
+      // Check if current user is blocked BY this profile using a secure RPC (bypasses RLS)
+      const { data: blockedByValue, error: blockedByError } = await supabase.rpc("is_blocked", {
+        viewer_id: currentUserId,
+        owner_id: userId,
+      });
       
       if (blockedByError) {
-        console.error("Error checking if blocked by user:", blockedByError);
+        console.error("Error checking if blocked by user (rpc):", blockedByError);
       }
-      setIsBlockedByUser(!!blockedByData);
+      setIsBlockedByUser(!!blockedByValue);
     } catch (error) {
       console.error("Failed to fetch block status:", error);
     } finally {
@@ -277,7 +275,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
       return;
     }
 
-    if (isBlockedByUser) {
+    if (isBlockedByUser || isBlocked) {
       toast.error("You cannot follow this user");
       return;
     }
@@ -353,7 +351,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
             backgroundPosition: "center",
           }}
         >
-          {currentUserId !== userId && !isBlockedByUser && (
+          {currentUserId !== userId && !isBlockedByUser && !isBlocked && (
             <div className="absolute top-4 right-4 flex gap-2">
               <Button 
                 variant={isFollowing ? "secondary" : "default"} 
@@ -458,10 +456,10 @@ const Profile = ({ currentUserId }: ProfileProps) => {
         {currentUserId === userId && (
           <CreatePost userId={currentUserId} onPostCreated={fetchUserPosts} />
         )}
-        {isBlockedByUser ? (
+        {(isBlockedByUser || isBlocked) ? (
           <div className="text-center py-12 bg-card rounded-lg border">
             <p className="text-muted-foreground">You cannot view this profile</p>
-            <p className="text-sm text-muted-foreground mt-2">This user has blocked you</p>
+            <p className="text-sm text-muted-foreground mt-2">You can no longer view this profile or follow this user</p>
           </div>
         ) : !canViewPosts ? (
           <div className="text-center py-12 bg-card rounded-lg border">
