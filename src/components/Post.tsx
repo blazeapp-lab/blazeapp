@@ -78,9 +78,6 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
     setRepostsCount(post.reposts_count);
     setViewsCount(post.views_count);
     
-    // Track view when post is rendered
-    trackView();
-    
     if (currentUserId) {
       checkIfLiked();
       checkIfBrokenHearted();
@@ -94,6 +91,7 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
         post_id: post.id,
         user_id: currentUserId || null,
       });
+      setViewsCount((prev) => prev + 1);
     } catch (error) {
       // Ignore duplicate view errors
     }
@@ -302,6 +300,8 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
       return;
     }
 
+    // Track view when clicking on post
+    trackView();
     navigate(`/post/${post.id}`);
   };
 
