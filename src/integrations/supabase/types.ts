@@ -205,6 +205,93 @@ export type Database = {
           },
         ]
       }
+      notification_settings: {
+        Row: {
+          broken_hearts: boolean | null
+          comment_likes: boolean | null
+          comments: boolean | null
+          created_at: string | null
+          follows: boolean | null
+          id: string
+          likes: boolean | null
+          reposts: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          broken_hearts?: boolean | null
+          comment_likes?: boolean | null
+          comments?: boolean | null
+          created_at?: string | null
+          follows?: boolean | null
+          id?: string
+          likes?: boolean | null
+          reposts?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          broken_hearts?: boolean | null
+          comment_likes?: boolean | null
+          comments?: boolean | null
+          created_at?: string | null
+          follows?: boolean | null
+          id?: string
+          likes?: boolean | null
+          reposts?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          comment_id: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          post_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          comment_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          post_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          comment_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          post_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_views: {
         Row: {
           created_at: string
@@ -360,12 +447,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_notification: {
+        Args: {
+          actor_id: string
+          comment_id?: string
+          notif_type: string
+          post_id?: string
+          recipient_id: string
+        }
+        Returns: undefined
+      }
       delete_user_account: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
       is_blocked: {
         Args: { owner_id: string; viewer_id: string }
+        Returns: boolean
+      }
+      should_notify: {
+        Args: { notification_type: string; recipient_id: string }
         Returns: boolean
       }
     }

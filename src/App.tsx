@@ -9,6 +9,7 @@ import Profile from "./pages/Profile";
 import Search from "./pages/Search";
 import Settings from "./pages/Settings";
 import PostDetail from "./pages/PostDetail";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 import Header from "@/components/Header";
 import { useEffect, useState } from "react";
@@ -47,6 +48,7 @@ const App = () => {
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/search" element={<Search currentUserId={user?.id} />} />
+                  <Route path="/notifications" element={<Notifications />} />
                   <Route path="/profile/:userId" element={<Profile currentUserId={user?.id} />} />
                   <Route path="/post/:postId" element={<PostDetail currentUserId={user?.id} />} />
                   <Route path="/settings" element={<Settings />} />

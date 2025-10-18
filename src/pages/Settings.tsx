@@ -24,6 +24,14 @@ const Settings = () => {
   const [userId, setUserId] = useState("");
   const [bio, setBio] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
+  const [notificationSettings, setNotificationSettings] = useState({
+    likes: true,
+    comments: true,
+    follows: true,
+    reposts: true,
+    broken_hearts: true,
+    comment_likes: true,
+  });
 
   useEffect(() => {
     fetchUserData();
@@ -48,6 +56,24 @@ const Settings = () => {
         setBannerUrl(profile.banner_url || "");
         setBio(profile.bio || "");
         setIsPrivate(profile.is_private || false);
+      }
+
+      // Fetch notification settings
+      const { data: settings } = await supabase
+        .from("notification_settings")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+      
+      if (settings) {
+        setNotificationSettings({
+          likes: settings.likes,
+          comments: settings.comments,
+          follows: settings.follows,
+          reposts: settings.reposts,
+          broken_hearts: settings.broken_hearts,
+          comment_likes: settings.comment_likes,
+        });
       }
     }
   };
@@ -258,6 +284,48 @@ const Settings = () => {
       setNewPassword("");
       setConfirmPassword("");
     }
+  };
+
+  const handleNotificationToggle = async (type: keyof typeof notificationSettings, checked: boolean) => {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
+      // Check if settings exist
+      const { data: existing } = await supabase
+        .from("notification_settings")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (existing) {
+        // Update existing settings
+        const { error } = await supabase
+          .from("notification_settings")
+          .update({ [type]: checked })
+          .eq("user_id", user.id);
+        
+        if (error) {
+          toast.error(error.message);
+        } else {
+          setNotificationSettings(prev => ({ ...prev, [type]: checked }));
+          toast.success("Notification settings updated");
+        }
+      } else {
+        // Create new settings
+        const { error } = await supabase
+          .from("notification_settings")
+          .insert({ user_id: user.id, [type]: checked });
+        
+        if (error) {
+          toast.error(error.message);
+        } else {
+          setNotificationSettings(prev => ({ ...prev, [type]: checked }));
+          toast.success("Notification settings updated");
+        }
+      }
+    }
+    setLoading(false);
   };
 
   return (
@@ -502,6 +570,99 @@ const Settings = () => {
             <Button onClick={handleUpdatePassword} disabled={loading}>
               Update Password
             </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Notifications</CardTitle>
+            <CardDescription>Choose which notifications you want to receive</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="notif-likes">Likes</Label>
+                <p className="text-sm text-muted-foreground">
+                  Get notified when someone likes your post
+                </p>
+              </div>
+              <Switch
+                id="notif-likes"
+                checked={notificationSettings.likes}
+                onCheckedChange={(checked) => handleNotificationToggle("likes", checked)}
+                disabled={loading}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="notif-comments">Comments</Label>
+                <p className="text-sm text-muted-foreground">
+                  Get notified when someone comments on your post
+                </p>
+              </div>
+              <Switch
+                id="notif-comments"
+                checked={notificationSettings.comments}
+                onCheckedChange={(checked) => handleNotificationToggle("comments", checked)}
+                disabled={loading}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="notif-follows">Follows</Label>
+                <p className="text-sm text-muted-foreground">
+                  Get notified when someone follows you
+                </p>
+              </div>
+              <Switch
+                id="notif-follows"
+                checked={notificationSettings.follows}
+                onCheckedChange={(checked) => handleNotificationToggle("follows", checked)}
+                disabled={loading}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="notif-reposts">Reposts</Label>
+                <p className="text-sm text-muted-foreground">
+                  Get notified when someone reposts your post
+                </p>
+              </div>
+              <Switch
+                id="notif-reposts"
+                checked={notificationSettings.reposts}
+                onCheckedChange={(checked) => handleNotificationToggle("reposts", checked)}
+                disabled={loading}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="notif-broken-hearts">Broken Hearts</Label>
+                <p className="text-sm text-muted-foreground">
+                  Get notified when someone reacts with a broken heart
+                </p>
+              </div>
+              <Switch
+                id="notif-broken-hearts"
+                checked={notificationSettings.broken_hearts}
+                onCheckedChange={(checked) => handleNotificationToggle("broken_hearts", checked)}
+                disabled={loading}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="notif-comment-likes">Comment Likes</Label>
+                <p className="text-sm text-muted-foreground">
+                  Get notified when someone likes your comment
+                </p>
+              </div>
+              <Switch
+                id="notif-comment-likes"
+                checked={notificationSettings.comment_likes}
+                onCheckedChange={(checked) => handleNotificationToggle("comment_likes", checked)}
+                disabled={loading}
+              />
+            </div>
           </CardContent>
         </Card>
 

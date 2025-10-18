@@ -1,8 +1,10 @@
-import { Home, User, LogOut, PenSquare, Search as SearchIcon } from "lucide-react";
+import { Home, User, LogOut, PenSquare, Search as SearchIcon, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
 
 interface HeaderProps {
   userId: string | undefined;
@@ -11,6 +13,44 @@ interface HeaderProps {
 const Header = ({ userId }: HeaderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchUnreadCount = async () => {
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("is_read", false);
+
+      setUnreadCount(count || 0);
+    };
+
+    fetchUnreadCount();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel("notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          fetchUnreadCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -21,6 +61,7 @@ const Header = ({ userId }: HeaderProps) => {
   const navItems = [
     { icon: Home, label: "Home", path: "/" },
     { icon: SearchIcon, label: "Search", path: "/search" },
+    { icon: Bell, label: "Notifications", path: "/notifications", badge: unreadCount },
     { icon: User, label: "Profile", path: `/profile/${userId}` },
   ];
 
@@ -45,8 +86,17 @@ const Header = ({ userId }: HeaderProps) => {
                   variant={isActive ? "secondary" : "ghost"}
                   size="sm"
                   onClick={() => navigate(item.path)}
+                  className="relative"
                 >
                   <Icon className="h-4 w-4" />
+                  {item.badge && item.badge > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                    >
+                      {item.badge > 9 ? "9+" : item.badge}
+                    </Badge>
+                  )}
                 </Button>
               );
             })}
