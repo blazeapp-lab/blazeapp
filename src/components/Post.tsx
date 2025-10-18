@@ -363,24 +363,24 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <span 
-                className="font-semibold hover:underline cursor-pointer"
+                className="text-sm font-semibold hover:underline cursor-pointer"
                 onClick={() => navigate(`/profile/${post.profiles.id}`)}
               >
                 {post.profiles.display_name || post.profiles.username}
               </span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 @{post.profiles.username}
               </span>
-              <span className="text-sm text-muted-foreground">·</span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs text-muted-foreground">·</span>
+              <span className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
               </span>
               {post.updated_at !== post.created_at && (
                 <>
-                  <span className="text-sm text-muted-foreground">·</span>
-                  <span className="text-sm text-muted-foreground italic">edited</span>
+                  <span className="text-xs text-muted-foreground">·</span>
+                  <span className="text-xs text-muted-foreground italic">edited</span>
                 </>
               )}
             </div>
