@@ -17,7 +17,6 @@ interface FullScreenPostProps {
     comments_count: number;
     broken_hearts_count: number;
     reposts_count: number;
-    views_count: number;
     created_at: string;
     user_id: string;
     profiles: {

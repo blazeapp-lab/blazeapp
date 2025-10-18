@@ -215,12 +215,12 @@ const Notifications = () => {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-3xl font-bold">Notifications</h1>
+          <h1 className="text-2xl font-bold">Notifications</h1>
         </div>
         
         {unreadCount > 0 && (
           <Button variant="outline" size="sm" onClick={markAllAsRead}>
-            Mark all as read
+            Mark as read
           </Button>
         )}
       </div>
