@@ -215,6 +215,7 @@ export type Database = {
           id: string
           likes: boolean | null
           reposts: boolean | null
+          tags: boolean | null
           updated_at: string | null
           user_id: string
         }
@@ -227,6 +228,7 @@ export type Database = {
           id?: string
           likes?: boolean | null
           reposts?: boolean | null
+          tags?: boolean | null
           updated_at?: string | null
           user_id: string
         }
@@ -239,6 +241,7 @@ export type Database = {
           id?: string
           likes?: boolean | null
           reposts?: boolean | null
+          tags?: boolean | null
           updated_at?: string | null
           user_id?: string
         }
@@ -464,6 +467,10 @@ export type Database = {
       is_blocked: {
         Args: { owner_id: string; viewer_id: string }
         Returns: boolean
+      }
+      notify_tagged_users: {
+        Args: { post_id_param: string; tagged_usernames: string[] }
+        Returns: undefined
       }
       should_notify: {
         Args: { notification_type: string; recipient_id: string }

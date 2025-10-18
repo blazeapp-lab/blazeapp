@@ -106,13 +106,30 @@ const CreatePost = ({ userId, onPostCreated }: CreatePostProps) => {
         mediaUrl = await uploadMedia(mediaFile);
       }
 
-      const { error } = await supabase.from("posts").insert({
-        user_id: userId,
-        content: validatedData.content,
-        image_url: mediaUrl,
-      });
+      const { data: newPost, error } = await supabase
+        .from("posts")
+        .insert({
+          user_id: userId,
+          content: validatedData.content,
+          image_url: mediaUrl,
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Extract @username mentions from content
+      const mentionRegex = /@(\w+)/g;
+      const mentions = [...validatedData.content.matchAll(mentionRegex)];
+      const taggedUsernames = [...new Set(mentions.map(match => match[1]))];
+
+      // Notify tagged users
+      if (taggedUsernames.length > 0 && newPost) {
+        await supabase.rpc("notify_tagged_users", {
+          post_id_param: newPost.id,
+          tagged_usernames: taggedUsernames,
+        });
+      }
 
       toast.success("Post created successfully!");
       setContent("");

@@ -119,6 +119,8 @@ const Notifications = () => {
         return <HeartCrack className="h-5 w-5 text-orange-500" />;
       case "comment_like":
         return <ThumbsUp className="h-5 w-5 text-yellow-500" />;
+      case "tag":
+        return <UserPlus className="h-5 w-5 text-cyan-500" />;
       default:
         return null;
     }
@@ -138,6 +140,8 @@ const Notifications = () => {
         return "reacted with 💔 to your post";
       case "comment_like":
         return "liked your comment";
+      case "tag":
+        return "tagged you in a post";
       default:
         return "interacted with your content";
     }

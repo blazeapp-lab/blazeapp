@@ -31,6 +31,7 @@ const Settings = () => {
     reposts: true,
     broken_hearts: true,
     comment_likes: true,
+    tags: true,
   });
 
   useEffect(() => {
@@ -73,6 +74,7 @@ const Settings = () => {
           reposts: settings.reposts,
           broken_hearts: settings.broken_hearts,
           comment_likes: settings.comment_likes,
+          tags: settings.tags,
         });
       }
     }
@@ -646,6 +648,20 @@ const Settings = () => {
                 id="notif-broken-hearts"
                 checked={notificationSettings.broken_hearts}
                 onCheckedChange={(checked) => handleNotificationToggle("broken_hearts", checked)}
+                disabled={loading}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="notif-tags">Tags</Label>
+                <p className="text-sm text-muted-foreground">
+                  Get notified when someone tags you in a post
+                </p>
+              </div>
+              <Switch
+                id="notif-tags"
+                checked={notificationSettings.tags}
+                onCheckedChange={(checked) => handleNotificationToggle("tags", checked)}
                 disabled={loading}
               />
             </div>
