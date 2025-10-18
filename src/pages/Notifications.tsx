@@ -21,6 +21,10 @@ interface Notification {
     display_name: string;
     avatar_url: string | null;
   } | null;
+  post?: {
+    content: string;
+    image_url: string | null;
+  } | null;
 }
 
 const Notifications = () => {
@@ -50,6 +54,10 @@ const Notifications = () => {
           username,
           display_name,
           avatar_url
+        ),
+        post:posts (
+          content,
+          image_url
         )
       `)
       .eq("user_id", user.id)
@@ -121,6 +129,8 @@ const Notifications = () => {
         return <ThumbsUp className="h-5 w-5 text-yellow-500" />;
       case "tag":
         return <UserPlus className="h-5 w-5 text-cyan-500" />;
+      case "new_post":
+        return <MessageCircle className="h-5 w-5 text-indigo-500" />;
       default:
         return null;
     }
@@ -142,6 +152,8 @@ const Notifications = () => {
         return "liked your comment";
       case "tag":
         return "tagged you in a post";
+      case "new_post":
+        return "posted something new";
       default:
         return "interacted with your content";
     }
@@ -207,6 +219,11 @@ const Notifications = () => {
                         {getNotificationText(notification.type)}
                       </p>
                     </div>
+                    {notification.type === "new_post" && notification.post && (
+                      <div className="mt-2 p-2 bg-muted/50 rounded text-sm text-muted-foreground line-clamp-2">
+                        {notification.post.content}
+                      </div>
+                    )}
                     <p className="text-xs text-muted-foreground mt-1">
                       {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                     </p>
