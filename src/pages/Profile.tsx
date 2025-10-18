@@ -42,6 +42,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   const [followersDialogOpen, setFollowersDialogOpen] = useState(false);
   const [followersDialogTab, setFollowersDialogTab] = useState<"followers" | "following">("followers");
   const [isBlocked, setIsBlocked] = useState(false);
+  const [isBlockedByUser, setIsBlockedByUser] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -55,7 +56,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
     if (profile) {
       fetchUserPosts();
     }
-  }, [profile, isFollowing, currentUserId]);
+  }, [profile, isFollowing, currentUserId, isBlockedByUser]);
 
   const fetchProfile = async () => {
     try {
@@ -76,6 +77,13 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   };
 
   const fetchUserPosts = async () => {
+    // Check if current user is blocked by the profile owner
+    if (isBlockedByUser) {
+      setPosts([]);
+      setCanViewPosts(false);
+      return;
+    }
+
     // Check if user can view posts
     if (profile?.is_private && currentUserId !== userId && !isFollowing) {
       setPosts([]);
@@ -179,14 +187,25 @@ const Profile = ({ currentUserId }: ProfileProps) => {
     if (!currentUserId || !userId || currentUserId === userId) return;
 
     try {
-      const { data } = await (supabase as any)
+      // Check if current user blocked this profile
+      const { data: blockedData } = await (supabase as any)
         .from("blocks")
         .select("id")
         .eq("blocker_id", currentUserId)
         .eq("blocked_id", userId)
         .maybeSingle();
       
-      setIsBlocked(!!data);
+      setIsBlocked(!!blockedData);
+
+      // Check if current user is blocked BY this profile
+      const { data: blockedByData } = await (supabase as any)
+        .from("blocks")
+        .select("id")
+        .eq("blocker_id", userId)
+        .eq("blocked_id", currentUserId)
+        .maybeSingle();
+      
+      setIsBlockedByUser(!!blockedByData);
     } catch (error) {
       console.error("Failed to fetch block status:", error);
     }
@@ -231,6 +250,11 @@ const Profile = ({ currentUserId }: ProfileProps) => {
     if (!currentUserId) {
       toast.error("Please sign in to follow users");
       navigate("/auth");
+      return;
+    }
+
+    if (isBlockedByUser) {
+      toast.error("You cannot follow this user");
       return;
     }
 
@@ -305,7 +329,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
             backgroundPosition: "center",
           }}
         >
-          {currentUserId !== userId && (
+          {currentUserId !== userId && !isBlockedByUser && (
             <div className="absolute top-4 right-4 flex gap-2">
               <Button 
                 variant={isFollowing ? "secondary" : "default"} 
@@ -410,7 +434,12 @@ const Profile = ({ currentUserId }: ProfileProps) => {
         {currentUserId === userId && (
           <CreatePost userId={currentUserId} onPostCreated={fetchUserPosts} />
         )}
-        {!canViewPosts ? (
+        {isBlockedByUser ? (
+          <div className="text-center py-12 bg-card rounded-lg border">
+            <p className="text-muted-foreground">You cannot view this profile</p>
+            <p className="text-sm text-muted-foreground mt-2">This user has blocked you</p>
+          </div>
+        ) : !canViewPosts ? (
           <div className="text-center py-12 bg-card rounded-lg border">
             <p className="text-muted-foreground">This account is private</p>
             <p className="text-sm text-muted-foreground mt-2">Follow to see their posts</p>
