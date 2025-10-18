@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, MapPin, Link as LinkIcon, Calendar, ArrowLeft, Settings, Ban } from "lucide-react";
+import { User, MapPin, Link as LinkIcon, Calendar, ArrowLeft, Settings, Ban, Pin } from "lucide-react";
 import Post from "@/components/Post";
 import EditProfileDialog from "@/components/EditProfileDialog";
 import CreatePost from "@/components/CreatePost";
@@ -22,6 +22,7 @@ interface Profile {
   location: string | null;
   created_at: string;
   is_private: boolean;
+  pinned_post_id: string | null;
 }
 
 interface ProfileProps {
@@ -33,6 +34,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
+  const [pinnedPost, setPinnedPost] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -98,6 +100,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
     // Blocked users (either direction) cannot view posts
     if (isBlockedByUser || isBlocked) {
       setPosts([]);
+      setPinnedPost(null);
       setCanViewPosts(false);
       return;
     }
@@ -105,11 +108,33 @@ const Profile = ({ currentUserId }: ProfileProps) => {
     // Check if user can view posts
     if (profile?.is_private && currentUserId !== profile.id && !isFollowing) {
       setPosts([]);
+      setPinnedPost(null);
       setCanViewPosts(false);
       return;
     }
     
     setCanViewPosts(true);
+    
+    // Fetch pinned post if it exists
+    if (profile?.pinned_post_id) {
+      const { data: pinned } = await supabase
+        .from("posts")
+        .select(`
+          *,
+          profiles (
+            id,
+            username,
+            display_name,
+            avatar_url
+          )
+        `)
+        .eq("id", profile.pinned_post_id)
+        .maybeSingle();
+      
+      setPinnedPost(pinned);
+    } else {
+      setPinnedPost(null);
+    }
     
     // Fetch original posts
     const { data: originalPosts, error: postsError } = await supabase
@@ -161,11 +186,16 @@ const Profile = ({ currentUserId }: ProfileProps) => {
     }));
 
     // Combine and sort by date (using repost date for reposts, created_at for originals)
-    const allPosts = [...(originalPosts || []), ...repostedPosts].sort((a, b) => {
+    let allPosts = [...(originalPosts || []), ...repostedPosts].sort((a, b) => {
       const dateA = new Date(a.reposted_at || a.created_at);
       const dateB = new Date(b.reposted_at || b.created_at);
       return dateB.getTime() - dateA.getTime();
     });
+
+    // Remove pinned post from regular posts list
+    if (profile?.pinned_post_id) {
+      allPosts = allPosts.filter(p => p.id !== profile.pinned_post_id);
+    }
 
     setPosts(allPosts);
   };
@@ -313,6 +343,27 @@ const Profile = ({ currentUserId }: ProfileProps) => {
       }
     } catch (error: any) {
       toast.error("Failed to update follow status");
+    }
+  };
+
+  const handlePinPost = async (postId: string) => {
+    if (!currentUserId || !profile) return;
+
+    try {
+      const newPinnedId = profile.pinned_post_id === postId ? null : postId;
+      
+      const { error } = await supabase
+        .from("profiles")
+        .update({ pinned_post_id: newPinnedId })
+        .eq("id", currentUserId);
+
+      if (error) throw error;
+
+      setProfile({ ...profile, pinned_post_id: newPinnedId });
+      toast.success(newPinnedId ? "Post pinned" : "Post unpinned");
+      fetchUserPosts();
+    } catch (error: any) {
+      toast.error("Failed to pin post");
     }
   };
 
@@ -478,12 +529,41 @@ const Profile = ({ currentUserId }: ProfileProps) => {
             <p className="text-muted-foreground">This account is private</p>
             <p className="text-sm text-muted-foreground mt-2">Follow to see their posts</p>
           </div>
-        ) : posts.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">No posts yet</p>
         ) : (
-        posts.map((post) => (
-          <Post key={post.id} post={post} currentUserId={currentUserId} onPostDeleted={fetchUserPosts} />
-        ))
+          <>
+            {pinnedPost && (
+              <div className="relative">
+                <div className="flex items-center gap-1 text-muted-foreground text-sm mb-2">
+                  <Pin className="h-4 w-4" />
+                  <span>Pinned post</span>
+                </div>
+                <Post 
+                  key={pinnedPost.id} 
+                  post={pinnedPost} 
+                  currentUserId={currentUserId} 
+                  onPostDeleted={fetchUserPosts}
+                  showPinButton={currentUserId === profile.id}
+                  isPinned={true}
+                  onPin={() => handlePinPost(pinnedPost.id)}
+                />
+              </div>
+            )}
+            {posts.length === 0 && !pinnedPost ? (
+              <p className="text-center text-muted-foreground py-8">No posts yet</p>
+            ) : (
+              posts.map((post) => (
+                <Post 
+                  key={post.id} 
+                  post={post} 
+                  currentUserId={currentUserId} 
+                  onPostDeleted={fetchUserPosts}
+                  showPinButton={currentUserId === profile.id}
+                  isPinned={false}
+                  onPin={() => handlePinPost(post.id)}
+                />
+              ))
+            )}
+          </>
         )}
       </div>
     </div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, User, Trash2, Edit, ThumbsDown, Repeat2, Eye, Share2 } from "lucide-react";
+import { Heart, MessageCircle, User, Trash2, Edit, ThumbsDown, Repeat2, Eye, Share2, Pin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -56,9 +56,12 @@ interface PostProps {
   };
   currentUserId: string | undefined;
   onPostDeleted?: () => void;
+  showPinButton?: boolean;
+  isPinned?: boolean;
+  onPin?: () => void;
 }
 
-const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
+const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPinned = false, onPin }: PostProps) => {
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes_count);
@@ -360,6 +363,16 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
                 </Button>
                 {currentUserId === post.user_id && (
                   <>
+                    {showPinButton && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={onPin}
+                        title={isPinned ? "Unpin post" : "Pin post"}
+                      >
+                        <Pin className={`h-4 w-4 ${isPinned ? "fill-current" : ""}`} />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
