@@ -34,6 +34,18 @@ const Home = ({ currentUserId }: HomeProps) => {
               display_name,
               avatar_url,
               is_private
+            ),
+            quoted_post:posts!posts_quoted_post_id_fkey (
+              id,
+              content,
+              image_url,
+              created_at,
+              profiles (
+                id,
+                username,
+                display_name,
+                avatar_url
+              )
             )
           `)
           .gte("created_at", oneWeekAgo.toISOString())
@@ -70,6 +82,18 @@ const Home = ({ currentUserId }: HomeProps) => {
               display_name,
               avatar_url,
               is_private
+            ),
+            quoted_post:posts!posts_quoted_post_id_fkey (
+              id,
+              content,
+              image_url,
+              created_at,
+              profiles (
+                id,
+                username,
+                display_name,
+                avatar_url
+              )
             )
           `)
           .in("user_id", followingIds)
@@ -94,6 +118,18 @@ const Home = ({ currentUserId }: HomeProps) => {
             display_name,
             avatar_url,
             is_private
+          ),
+          quoted_post:posts!posts_quoted_post_id_fkey (
+            id,
+            content,
+            image_url,
+            created_at,
+            profiles (
+              id,
+              username,
+              display_name,
+              avatar_url
+            )
           )
         `)
         .gte("created_at", oneWeekAgo.toISOString())

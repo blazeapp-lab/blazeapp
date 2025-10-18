@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, User, Trash2, Edit, ThumbsDown, Repeat2, Eye, Share2 } from "lucide-react";
+import { Heart, MessageCircle, User, Trash2, Edit, ThumbsDown, Repeat2, Eye, Share2, Quote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -25,7 +25,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
+import QuotePostDialog from "./QuotePostDialog";
+import QuotedPost from "./QuotedPost";
 
 interface PostProps {
   post: {
@@ -39,6 +47,19 @@ interface PostProps {
     views_count: number;
     created_at: string;
     user_id: string;
+    quoted_post_id: string | null;
+    quoted_post?: {
+      id: string;
+      content: string;
+      image_url: string | null;
+      created_at: string;
+      profiles: {
+        id: string;
+        username: string;
+        display_name: string | null;
+        avatar_url: string | null;
+      };
+    } | null;
     profiles: {
       id: string;
       username: string;
@@ -62,6 +83,7 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
   const [showComments, setShowComments] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showQuoteDialog, setShowQuoteDialog] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -371,6 +393,9 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
                 )}
               </>
             )}
+            {post.quoted_post && (
+              <QuotedPost quotedPost={post.quoted_post} />
+            )}
           </div>
         </div>
         
@@ -397,17 +422,37 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
             />
             <span>{formatNumber(brokenHeartsCount)}</span>
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2"
-            onClick={handleRepost}
-          >
-            <Repeat2
-              className={`h-5 w-5 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
-            />
-            <span>{formatNumber(repostsCount)}</span>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2"
+                onClick={(e) => {
+                  if (!currentUserId) {
+                    e.preventDefault();
+                    toast.error("Please sign in to repost");
+                    navigate("/auth");
+                  }
+                }}
+              >
+                <Repeat2
+                  className={`h-5 w-5 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
+                />
+                <span>{formatNumber(repostsCount)}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={handleRepost}>
+                <Repeat2 className="h-4 w-4 mr-2" />
+                {isReposted ? "Undo Repost" : "Repost"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowQuoteDialog(true)}>
+                <Quote className="h-4 w-4 mr-2" />
+                Quote Post
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             variant="ghost"
             size="sm"
@@ -468,6 +513,16 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {currentUserId && (
+        <QuotePostDialog
+          open={showQuoteDialog}
+          onOpenChange={setShowQuoteDialog}
+          quotedPost={post}
+          currentUserId={currentUserId}
+          onQuotePosted={() => onPostDeleted?.()}
+        />
+      )}
     </>
   );
 };
