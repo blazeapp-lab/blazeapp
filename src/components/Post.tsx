@@ -180,7 +180,8 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
       if (isLiked) {
         // Optimistic update
         setIsLiked(false);
-        setLikesCount((prev) => Math.max(0, prev - 1));
+        const newCount = Math.max(0, likesCount - 1);
+        setLikesCount(newCount);
         
         const { error } = await supabase
           .from("likes")
@@ -190,18 +191,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           
         if (error) throw error;
         
-        // Fetch actual count after mutation for accuracy
-        const { data: postData } = await supabase
-          .from("posts")
-          .select("likes_count")
-          .eq("id", post.id)
-          .single();
-          
-        if (postData) {
-          setLikesCount(postData.likes_count);
-          emitPostUpdate({ postId: post.id, likes_count: postData.likes_count });
-        }
-        
+        emitPostUpdate({ postId: post.id, likes_count: newCount });
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
@@ -213,12 +203,15 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
             .eq("post_id", post.id)
             .eq("user_id", currentUserId);
           setIsBrokenHearted(false);
-          setBrokenHeartsCount((prev) => Math.max(0, prev - 1));
+          const newBhCount = Math.max(0, brokenHeartsCount - 1);
+          setBrokenHeartsCount(newBhCount);
+          emitPostUpdate({ postId: post.id, broken_hearts_count: newBhCount });
         }
         
         // Optimistic update
         setIsLiked(true);
-        setLikesCount((prev) => prev + 1);
+        const newCount = likesCount + 1;
+        setLikesCount(newCount);
         
         const { error } = await supabase.from("likes").insert({
           post_id: post.id,
@@ -227,18 +220,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         
         if (error) throw error;
         
-        // Fetch actual count after mutation
-        const { data: postData } = await supabase
-          .from("posts")
-          .select("likes_count")
-          .eq("id", post.id)
-          .single();
-          
-        if (postData) {
-          setLikesCount(postData.likes_count);
-          emitPostUpdate({ postId: post.id, likes_count: postData.likes_count });
-        }
-        
+        emitPostUpdate({ postId: post.id, likes_count: newCount });
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       }
@@ -323,7 +305,8 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
       if (isBrokenHearted) {
         // Optimistic update
         setIsBrokenHearted(false);
-        setBrokenHeartsCount((prev) => Math.max(0, prev - 1));
+        const newCount = Math.max(0, brokenHeartsCount - 1);
+        setBrokenHeartsCount(newCount);
         
         const { error } = await supabase
           .from("broken_hearts")
@@ -333,18 +316,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           
         if (error) throw error;
         
-        // Fetch actual count
-        const { data: postData } = await supabase
-          .from("posts")
-          .select("broken_hearts_count")
-          .eq("id", post.id)
-          .single();
-          
-        if (postData) {
-          setBrokenHeartsCount(postData.broken_hearts_count);
-          emitPostUpdate({ postId: post.id, broken_hearts_count: postData.broken_hearts_count });
-        }
-        
+        emitPostUpdate({ postId: post.id, broken_hearts_count: newCount });
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
@@ -356,12 +328,15 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
             .eq("post_id", post.id)
             .eq("user_id", currentUserId);
           setIsLiked(false);
-          setLikesCount((prev) => Math.max(0, prev - 1));
+          const newLikeCount = Math.max(0, likesCount - 1);
+          setLikesCount(newLikeCount);
+          emitPostUpdate({ postId: post.id, likes_count: newLikeCount });
         }
         
         // Optimistic update
         setIsBrokenHearted(true);
-        setBrokenHeartsCount((prev) => prev + 1);
+        const newCount = brokenHeartsCount + 1;
+        setBrokenHeartsCount(newCount);
         
         const { error } = await supabase.from("broken_hearts").insert({
           post_id: post.id,
@@ -370,18 +345,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         
         if (error) throw error;
         
-        // Fetch actual count
-        const { data: postData } = await supabase
-          .from("posts")
-          .select("broken_hearts_count")
-          .eq("id", post.id)
-          .single();
-          
-        if (postData) {
-          setBrokenHeartsCount(postData.broken_hearts_count);
-          emitPostUpdate({ postId: post.id, broken_hearts_count: postData.broken_hearts_count });
-        }
-        
+        emitPostUpdate({ postId: post.id, broken_hearts_count: newCount });
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       }
@@ -411,7 +375,8 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
       if (isReposted) {
         // Optimistic update
         setIsReposted(false);
-        setRepostsCount((prev) => Math.max(0, prev - 1));
+        const newCount = Math.max(0, repostsCount - 1);
+        setRepostsCount(newCount);
         
         const { error } = await supabase
           .from("reposts")
@@ -421,25 +386,15 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           
         if (error) throw error;
         
-        // Fetch actual count
-        const { data: postData } = await supabase
-          .from("posts")
-          .select("reposts_count")
-          .eq("id", post.id)
-          .single();
-          
-        if (postData) {
-          setRepostsCount(postData.reposts_count);
-          emitPostUpdate({ postId: post.id, reposts_count: postData.reposts_count });
-        }
-        
+        emitPostUpdate({ postId: post.id, reposts_count: newCount });
         toast.success("Repost removed");
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
         // Optimistic update
         setIsReposted(true);
-        setRepostsCount((prev) => prev + 1);
+        const newCount = repostsCount + 1;
+        setRepostsCount(newCount);
         
         const { error } = await supabase.from("reposts").insert({
           post_id: post.id,
@@ -448,18 +403,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         
         if (error) throw error;
         
-        // Fetch actual count
-        const { data: postData } = await supabase
-          .from("posts")
-          .select("reposts_count")
-          .eq("id", post.id)
-          .single();
-          
-        if (postData) {
-          setRepostsCount(postData.reposts_count);
-          emitPostUpdate({ postId: post.id, reposts_count: postData.reposts_count });
-        }
-        
+        emitPostUpdate({ postId: post.id, reposts_count: newCount });
         toast.success("Reposted!");
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
