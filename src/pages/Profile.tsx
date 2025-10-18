@@ -3,12 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, MapPin, Link as LinkIcon, Calendar, ArrowLeft, Settings, Ban } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { User, MapPin, Link as LinkIcon, Calendar, ArrowLeft, Settings } from "lucide-react";
 import Post from "@/components/Post";
 import EditProfileDialog from "@/components/EditProfileDialog";
 import CreatePost from "@/components/CreatePost";
-import FollowersDialog from "@/components/FollowersDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -40,16 +38,11 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [canViewPosts, setCanViewPosts] = useState(true);
-  const [isBlocked, setIsBlocked] = useState(false);
-  const [hasBlockedCurrentUser, setHasBlockedCurrentUser] = useState(false);
-  const [followersDialogOpen, setFollowersDialogOpen] = useState(false);
-  const [followersDialogTab, setFollowersDialogTab] = useState<"followers" | "following">("followers");
 
   useEffect(() => {
     if (userId) {
       fetchProfile();
       fetchFollowData();
-      fetchBlockStatus();
     }
   }, [userId, currentUserId]);
 
@@ -57,7 +50,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
     if (profile) {
       fetchUserPosts();
     }
-  }, [profile, isFollowing, currentUserId, isBlocked, hasBlockedCurrentUser]);
+  }, [profile, isFollowing, currentUserId]);
 
   const fetchProfile = async () => {
     try {
@@ -78,14 +71,8 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   };
 
   const fetchUserPosts = async () => {
-    // Check if user can view posts (private account, blocked, or has blocked current user)
+    // Check if user can view posts
     if (profile?.is_private && currentUserId !== userId && !isFollowing) {
-      setPosts([]);
-      setCanViewPosts(false);
-      return;
-    }
-    
-    if (isBlocked || hasBlockedCurrentUser) {
       setPosts([]);
       setCanViewPosts(false);
       return;
@@ -183,39 +170,10 @@ const Profile = ({ currentUserId }: ProfileProps) => {
     }
   };
 
-  const fetchBlockStatus = async () => {
-    if (!currentUserId || !userId || currentUserId === userId) return;
-
-    // Check if current user has blocked this profile
-    const { data: blockedData } = await supabase
-      .from("blocks")
-      .select("id")
-      .eq("blocker_id", currentUserId)
-      .eq("blocked_id", userId)
-      .maybeSingle();
-    
-    setIsBlocked(!!blockedData);
-
-    // Check if this profile has blocked current user
-    const { data: blockerData } = await supabase
-      .from("blocks")
-      .select("id")
-      .eq("blocker_id", userId)
-      .eq("blocked_id", currentUserId)
-      .maybeSingle();
-    
-    setHasBlockedCurrentUser(!!blockerData);
-  };
-
   const handleFollow = async () => {
     if (!currentUserId) {
       toast.error("Please sign in to follow users");
       navigate("/auth");
-      return;
-    }
-
-    if (isBlocked) {
-      toast.error("Unblock this user first to follow them");
       return;
     }
 
@@ -240,48 +198,6 @@ const Profile = ({ currentUserId }: ProfileProps) => {
       }
     } catch (error: any) {
       toast.error("Failed to update follow status");
-    }
-  };
-
-  const handleBlock = async () => {
-    if (!currentUserId) {
-      toast.error("Please sign in to block users");
-      return;
-    }
-
-    try {
-      if (isBlocked) {
-        await supabase
-          .from("blocks")
-          .delete()
-          .eq("blocker_id", currentUserId)
-          .eq("blocked_id", userId);
-        setIsBlocked(false);
-        toast.success("User unblocked");
-      } else {
-        // Unfollow if following
-        if (isFollowing) {
-          await supabase
-            .from("follows")
-            .delete()
-            .eq("follower_id", currentUserId)
-            .eq("following_id", userId);
-          setIsFollowing(false);
-          setFollowerCount((prev) => prev - 1);
-        }
-
-        await supabase
-          .from("blocks")
-          .insert({
-            blocker_id: currentUserId,
-            blocked_id: userId,
-          });
-        setIsBlocked(true);
-        toast.success("User blocked");
-      }
-      fetchUserPosts();
-    } catch (error: any) {
-      toast.error("Failed to update block status");
     }
   };
 
@@ -348,27 +264,12 @@ const Profile = ({ currentUserId }: ProfileProps) => {
                 Edit Profile
               </Button>
             ) : currentUserId ? (
-              <div className="flex gap-2">
-                <Button 
-                  variant={isFollowing ? "outline" : "default"} 
-                  onClick={handleFollow}
-                  disabled={hasBlockedCurrentUser}
-                >
-                  {isFollowing ? "Unfollow" : "Follow"}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon">
-                      <Ban className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleBlock}>
-                      {isBlocked ? "Unblock User" : "Block User"}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <Button 
+                variant={isFollowing ? "outline" : "default"} 
+                onClick={handleFollow}
+              >
+                {isFollowing ? "Unfollow" : "Follow"}
+              </Button>
             ) : null}
           </div>
 
@@ -383,26 +284,14 @@ const Profile = ({ currentUserId }: ProfileProps) => {
             {profile.bio && <p className="text-sm">{profile.bio}</p>}
 
             <div className="flex gap-4 text-sm">
-              <button 
-                className="flex items-center gap-1 hover:underline cursor-pointer"
-                onClick={() => {
-                  setFollowersDialogTab("followers");
-                  setFollowersDialogOpen(true);
-                }}
-              >
+              <div className="flex items-center gap-1">
                 <span className="font-semibold text-foreground">{followerCount}</span>
                 <span className="text-muted-foreground">Followers</span>
-              </button>
-              <button 
-                className="flex items-center gap-1 hover:underline cursor-pointer"
-                onClick={() => {
-                  setFollowersDialogTab("following");
-                  setFollowersDialogOpen(true);
-                }}
-              >
+              </div>
+              <div className="flex items-center gap-1">
                 <span className="font-semibold text-foreground">{followingCount}</span>
                 <span className="text-muted-foreground">Following</span>
-              </button>
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
@@ -432,14 +321,6 @@ const Profile = ({ currentUserId }: ProfileProps) => {
         </div>
       </div>
 
-      <FollowersDialog
-        open={followersDialogOpen}
-        onOpenChange={setFollowersDialogOpen}
-        userId={userId!}
-        currentUserId={currentUserId}
-        defaultTab={followersDialogTab}
-      />
-
       <div className="mt-6 space-y-4">
         <h2 className="text-xl font-bold">Posts</h2>
         {currentUserId === userId && (
@@ -447,21 +328,8 @@ const Profile = ({ currentUserId }: ProfileProps) => {
         )}
         {!canViewPosts ? (
           <div className="text-center py-12 bg-card rounded-lg border">
-            {isBlocked ? (
-              <>
-                <p className="text-muted-foreground">You have blocked this user</p>
-                <p className="text-sm text-muted-foreground mt-2">Unblock to see their posts</p>
-              </>
-            ) : hasBlockedCurrentUser ? (
-              <>
-                <p className="text-muted-foreground">This user has blocked you</p>
-              </>
-            ) : (
-              <>
-                <p className="text-muted-foreground">This account is private</p>
-                <p className="text-sm text-muted-foreground mt-2">Follow to see their posts</p>
-              </>
-            )}
+            <p className="text-muted-foreground">This account is private</p>
+            <p className="text-sm text-muted-foreground mt-2">Follow to see their posts</p>
           </div>
         ) : posts.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">No posts yet</p>

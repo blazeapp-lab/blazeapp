@@ -73,29 +73,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
 
       if (error) throw error;
       
-      // Check if user has blocked or been blocked by post author
-      if (currentUserId && currentUserId !== data.user_id) {
-        const { data: blockedData } = await supabase
-          .from("blocks")
-          .select("id")
-          .eq("blocker_id", currentUserId)
-          .eq("blocked_id", data.user_id)
-          .maybeSingle();
-        
-        const { data: blockerData } = await supabase
-          .from("blocks")
-          .select("id")
-          .eq("blocker_id", data.user_id)
-          .eq("blocked_id", currentUserId)
-          .maybeSingle();
-        
-        if (blockedData || blockerData) {
-          toast.error("Cannot view this post");
-          navigate("/");
-          return;
-        }
-      }
-      
       // Check if user can view this post (if account is private)
       if (data.profiles.is_private && currentUserId !== data.user_id) {
         // Check if current user is following the post author
