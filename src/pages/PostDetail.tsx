@@ -39,6 +39,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
   const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
+  const [commentsCount, setCommentsCount] = useState(0);
   const [isBrokenHearted, setIsBrokenHearted] = useState(false);
   const [brokenHeartsCount, setBrokenHeartsCount] = useState(0);
   const [isReposted, setIsReposted] = useState(false);
@@ -73,6 +74,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           setLikesCount(newPost.likes_count);
           setBrokenHeartsCount(newPost.broken_hearts_count);
           setRepostsCount(newPost.reposts_count);
+          setCommentsCount(newPost.comments_count);
         }
       )
       .subscribe();
@@ -122,6 +124,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
       setLikesCount(data.likes_count);
       setBrokenHeartsCount(data.broken_hearts_count);
       setRepostsCount(data.reposts_count);
+      setCommentsCount(data.comments_count);
       setEditContent(data.content);
 
       if (currentUserId) {
@@ -456,7 +459,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
             className="gap-2"
           >
             <MessageCircle className="h-5 w-5" />
-            <span>{formatNumber(post.comments_count)}</span>
+            <span>{formatNumber(commentsCount)}</span>
           </Button>
         </div>
 
