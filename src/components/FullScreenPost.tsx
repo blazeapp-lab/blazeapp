@@ -95,7 +95,7 @@ const FullScreenPost = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-4 pt-4 border-t">
+          <div className="flex items-center gap-3 pt-4 border-t">
             <Button
               variant="ghost"
               size="sm"
