@@ -10,6 +10,7 @@ import Search from "./pages/Search";
 import Settings from "./pages/Settings";
 import PostDetail from "./pages/PostDetail";
 import Notifications from "./pages/Notifications";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 import Header from "@/components/Header";
 import { useEffect, useState } from "react";
@@ -52,6 +53,7 @@ const App = () => {
                   <Route path="/profile/:userId" element={<Profile currentUserId={user?.id} />} />
                   <Route path="/post/:postId" element={<PostDetail currentUserId={user?.id} />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/terms" element={<TermsOfService />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </MainLayout>

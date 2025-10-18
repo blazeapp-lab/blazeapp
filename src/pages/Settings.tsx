@@ -682,6 +682,22 @@ const Settings = () => {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Legal & Support</CardTitle>
+            <CardDescription>View our terms and policies</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/terms")}
+              className="w-full"
+            >
+              Terms of Service
+            </Button>
+          </CardContent>
+        </Card>
+
         <Card className="border-destructive">
           <CardHeader>
             <CardTitle className="text-destructive">Danger Zone</CardTitle>
