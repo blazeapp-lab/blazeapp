@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Heart, MessageCircle, User, Repeat2, Eye, ThumbsDown, ArrowLeft, Share2, Trash2, Edit } from "lucide-react";
+import { Heart, MessageCircle, User, Repeat2, ThumbsDown, ArrowLeft, Share2, Trash2, Edit } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import CommentSection from "@/components/CommentSection";
 import { toast } from "sonner";
@@ -43,7 +43,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
   const [brokenHeartsCount, setBrokenHeartsCount] = useState(0);
   const [isReposted, setIsReposted] = useState(false);
   const [repostsCount, setRepostsCount] = useState(0);
-  const [viewsCount, setViewsCount] = useState(0);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editContent, setEditContent] = useState("");
@@ -52,7 +51,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
   useEffect(() => {
     if (postId) {
       fetchPost();
-      trackView();
     }
   }, [postId, currentUserId]);
 
@@ -75,7 +73,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           setLikesCount(newPost.likes_count);
           setBrokenHeartsCount(newPost.broken_hearts_count);
           setRepostsCount(newPost.reposts_count);
-          setViewsCount(newPost.views_count);
         }
       )
       .subscribe();
@@ -125,7 +122,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
       setLikesCount(data.likes_count);
       setBrokenHeartsCount(data.broken_hearts_count);
       setRepostsCount(data.reposts_count);
-      setViewsCount(data.views_count);
       setEditContent(data.content);
 
       if (currentUserId) {
@@ -138,19 +134,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
       navigate("/");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const trackView = async () => {
-    if (!postId) return;
-    
-    try {
-      await supabase.from("post_views").insert({
-        post_id: postId,
-        user_id: currentUserId || null,
-      });
-    } catch (error) {
-      // Ignore duplicate view errors
     }
   };
 
@@ -200,7 +183,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           .delete()
           .eq("post_id", postId)
           .eq("user_id", currentUserId);
-        setLikesCount((prev) => prev - 1);
         setIsLiked(false);
       } else {
         if (isBrokenHearted) {
@@ -209,7 +191,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
             .delete()
             .eq("post_id", postId)
             .eq("user_id", currentUserId);
-          setBrokenHeartsCount((prev) => prev - 1);
           setIsBrokenHearted(false);
         }
         
@@ -217,7 +198,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           post_id: postId,
           user_id: currentUserId,
         });
-        setLikesCount((prev) => prev + 1);
         setIsLiked(true);
       }
     } catch (error: any) {
@@ -238,7 +218,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           .delete()
           .eq("post_id", postId)
           .eq("user_id", currentUserId);
-        setBrokenHeartsCount((prev) => prev - 1);
         setIsBrokenHearted(false);
       } else {
         if (isLiked) {
@@ -247,7 +226,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
             .delete()
             .eq("post_id", postId)
             .eq("user_id", currentUserId);
-          setLikesCount((prev) => prev - 1);
           setIsLiked(false);
         }
         
@@ -255,7 +233,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           post_id: postId,
           user_id: currentUserId,
         });
-        setBrokenHeartsCount((prev) => prev + 1);
         setIsBrokenHearted(true);
       }
     } catch (error: any) {
@@ -276,7 +253,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           .delete()
           .eq("post_id", postId)
           .eq("user_id", currentUserId);
-        setRepostsCount((prev) => prev - 1);
         setIsReposted(false);
         toast.success("Repost removed");
       } else {
@@ -284,7 +260,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           post_id: postId,
           user_id: currentUserId,
         });
-        setRepostsCount((prev) => prev + 1);
         setIsReposted(true);
         toast.success("Reposted!");
       }
@@ -483,10 +458,6 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
             <MessageCircle className="h-5 w-5" />
             <span>{formatNumber(post.comments_count)}</span>
           </Button>
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <Eye className="h-5 w-5" />
-            <span>{formatNumber(viewsCount)}</span>
-          </div>
         </div>
 
         {currentUserId && (
