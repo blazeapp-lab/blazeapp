@@ -251,24 +251,26 @@ const Profile = ({ currentUserId }: ProfileProps) => {
             backgroundPosition: "center",
           }}
         >
-          <div className="absolute top-4 right-4 flex gap-2">
-            {currentUserId === userId ? (
-              <Button
-                variant="secondary"
-                size="icon"
-                onClick={() => navigate("/settings")}
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-            ) : (
+          {currentUserId !== userId && (
+            <div className="absolute top-4 right-4 flex gap-2">
               <Button 
                 variant={isFollowing ? "secondary" : "default"} 
                 onClick={handleFollow}
               >
                 {isFollowing ? "Unfollow" : "Follow"}
               </Button>
-            )}
-          </div>
+            </div>
+          )}
+          {currentUserId === userId && (
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={() => navigate("/settings")}
+              className="absolute top-4 right-4"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         
         <div className="p-6">
@@ -279,11 +281,6 @@ const Profile = ({ currentUserId }: ProfileProps) => {
                 <User />
               </AvatarFallback>
             </Avatar>
-            {currentUserId === userId && (
-              <Button variant="outline" onClick={() => setEditDialogOpen(true)} className="mt-2">
-                Edit Profile
-              </Button>
-            )}
           </div>
 
           <div className="space-y-3">
