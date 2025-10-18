@@ -10,7 +10,7 @@ import CommentSection from "./CommentSection";
 import { useNavigate } from "react-router-dom";
 import { parseMentions } from "@/lib/mentionUtils";
 import { formatNumber } from "@/lib/utils";
-import { recordPostUpdate } from "@/lib/postSync";
+import { emitPostUpdate } from "@/lib/postEvents";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -156,7 +156,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         setIsLiked(false);
         setLikesCount((prev) => {
           const next = Math.max(0, prev - 1);
-          recordPostUpdate(post.id, { likes_count: next });
+          emitPostUpdate({ postId: post.id, likes_count: next });
           return next;
         });
         sessionStorage.setItem("blaze:refresh-feed", "1");
@@ -172,7 +172,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           setIsBrokenHearted(false);
           setBrokenHeartsCount((prev) => {
             const next = Math.max(0, prev - 1);
-            recordPostUpdate(post.id, { broken_hearts_count: next });
+            emitPostUpdate({ postId: post.id, broken_hearts_count: next });
             return next;
           });
         }
@@ -183,7 +183,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         setIsLiked(true);
         setLikesCount((prev) => {
           const next = prev + 1;
-          recordPostUpdate(post.id, { likes_count: next });
+          emitPostUpdate({ postId: post.id, likes_count: next });
           return next;
         });
         sessionStorage.setItem("blaze:refresh-feed", "1");
@@ -256,7 +256,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         setIsBrokenHearted(false);
         setBrokenHeartsCount((prev) => {
           const next = Math.max(0, prev - 1);
-          recordPostUpdate(post.id, { broken_hearts_count: next });
+          emitPostUpdate({ postId: post.id, broken_hearts_count: next });
           return next;
         });
         sessionStorage.setItem("blaze:refresh-feed", "1");
@@ -272,7 +272,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           setIsLiked(false);
           setLikesCount((prev) => {
             const next = Math.max(0, prev - 1);
-            recordPostUpdate(post.id, { likes_count: next });
+            emitPostUpdate({ postId: post.id, likes_count: next });
             return next;
           });
         }
@@ -283,7 +283,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         setIsBrokenHearted(true);
         setBrokenHeartsCount((prev) => {
           const next = prev + 1;
-          recordPostUpdate(post.id, { broken_hearts_count: next });
+          emitPostUpdate({ postId: post.id, broken_hearts_count: next });
           return next;
         });
         sessionStorage.setItem("blaze:refresh-feed", "1");
@@ -310,7 +310,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         setIsReposted(false);
         setRepostsCount((prev) => {
           const next = Math.max(0, prev - 1);
-          recordPostUpdate(post.id, { reposts_count: next });
+          emitPostUpdate({ postId: post.id, reposts_count: next });
           return next;
         });
         toast.success("Repost removed");
@@ -324,7 +324,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         setIsReposted(true);
         setRepostsCount((prev) => {
           const next = prev + 1;
-          recordPostUpdate(post.id, { reposts_count: next });
+          emitPostUpdate({ postId: post.id, reposts_count: next });
           return next;
         });
         toast.success("Reposted!");
