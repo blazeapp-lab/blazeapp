@@ -688,13 +688,22 @@ const Settings = () => {
             <CardDescription>View our terms and policies</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate("/terms")}
-              className="w-full"
-            >
-              Terms of Service
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate("/terms")}
+                className="w-full"
+              >
+                Terms of Service
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate("/privacy")}
+                className="w-full"
+              >
+                Privacy Policy
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
