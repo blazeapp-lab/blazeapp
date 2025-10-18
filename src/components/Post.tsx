@@ -78,12 +78,26 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
     setRepostsCount(post.reposts_count);
     setViewsCount(post.views_count);
     
+    // Track view when post is rendered
+    trackView();
+    
     if (currentUserId) {
       checkIfLiked();
       checkIfBrokenHearted();
       checkIfReposted();
     }
   }, [post.id, post.likes_count, post.broken_hearts_count, post.reposts_count, post.views_count, currentUserId]);
+
+  const trackView = async () => {
+    try {
+      await supabase.from("post_views").insert({
+        post_id: post.id,
+        user_id: currentUserId || null,
+      });
+    } catch (error) {
+      // Ignore duplicate view errors
+    }
+  };
 
   const checkIfLiked = async () => {
     if (!currentUserId) return;

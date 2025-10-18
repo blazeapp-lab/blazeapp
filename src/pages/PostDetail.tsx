@@ -112,12 +112,12 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
   };
 
   const trackView = async () => {
-    if (!currentUserId || !postId) return;
+    if (!postId) return;
     
     try {
       await supabase.from("post_views").insert({
         post_id: postId,
-        user_id: currentUserId,
+        user_id: currentUserId || null,
       });
     } catch (error) {
       // Ignore duplicate view errors
