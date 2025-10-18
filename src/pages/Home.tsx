@@ -61,7 +61,7 @@ const Home = ({ currentUserId }: HomeProps) => {
                 )
               `)
               .eq("id", post.quoted_post_id)
-              .single();
+              .maybeSingle();
             return { ...post, quoted_post: quotedPost };
           }
           return post;
