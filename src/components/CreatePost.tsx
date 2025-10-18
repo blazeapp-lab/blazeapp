@@ -14,7 +14,7 @@ const postSchema = z.object({
 const validateMediaFile = async (file: File): Promise<boolean> => {
   const validTypes = [
     'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-    'video/mp4', 'video/webm', 'video/quicktime'
+    'video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v', 'video/x-msvideo', 'video/mpeg'
   ];
   
   if (!validTypes.includes(file.type)) {
@@ -197,7 +197,7 @@ const CreatePost = ({ userId, onPostCreated }: CreatePostProps) => {
           <div className="flex items-center gap-2">
             <input
               type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime"
+              accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime,video/x-m4v,video/x-msvideo,video/mpeg"
               onChange={handleMediaChange}
               className="hidden"
               id="media-upload"
