@@ -1,7 +1,7 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, User, Repeat2, Eye, ThumbsDown } from "lucide-react";
+import { Heart, MessageCircle, User, Repeat2, ThumbsDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import CommentSection from "./CommentSection";
 import { parseMentions } from "@/lib/mentionUtils";
@@ -137,10 +137,6 @@ const FullScreenPost = ({
               />
               <span className="text-xs">{post.reposts_count}</span>
             </Button>
-            <div className="flex items-center gap-0.5 text-muted-foreground text-xs px-1.5">
-              <Eye className="h-3.5 w-3.5" />
-              <span>{post.views_count}</span>
-            </div>
           </div>
 
           {currentUserId && (

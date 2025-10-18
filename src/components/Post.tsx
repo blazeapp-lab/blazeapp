@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, User, Trash2, Edit, ThumbsDown, Repeat2, Eye, Share2, Pin } from "lucide-react";
+import { Heart, MessageCircle, User, Trash2, Edit, ThumbsDown, Repeat2, Share2, Pin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -178,7 +178,6 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           .delete()
           .eq("post_id", post.id)
           .eq("user_id", currentUserId);
-        setLikesCount((prev) => prev - 1);
         setIsLiked(false);
       } else {
         // If user has disliked, remove the dislike first
@@ -188,7 +187,6 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
             .delete()
             .eq("post_id", post.id)
             .eq("user_id", currentUserId);
-          setBrokenHeartsCount((prev) => prev - 1);
           setIsBrokenHearted(false);
         }
         
@@ -196,7 +194,6 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           post_id: post.id,
           user_id: currentUserId,
         });
-        setLikesCount((prev) => prev + 1);
         setIsLiked(true);
       }
     } catch (error: any) {
@@ -259,7 +256,6 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           .delete()
           .eq("post_id", post.id)
           .eq("user_id", currentUserId);
-        setBrokenHeartsCount((prev) => prev - 1);
         setIsBrokenHearted(false);
       } else {
         // If user has liked, remove the like first
@@ -269,7 +265,6 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
             .delete()
             .eq("post_id", post.id)
             .eq("user_id", currentUserId);
-          setLikesCount((prev) => prev - 1);
           setIsLiked(false);
         }
         
@@ -277,7 +272,6 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           post_id: post.id,
           user_id: currentUserId,
         });
-        setBrokenHeartsCount((prev) => prev + 1);
         setIsBrokenHearted(true);
       }
     } catch (error: any) {
@@ -298,7 +292,6 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           .delete()
           .eq("post_id", post.id)
           .eq("user_id", currentUserId);
-        setRepostsCount((prev) => prev - 1);
         setIsReposted(false);
         toast.success("Repost removed");
       } else {
@@ -306,7 +299,6 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           post_id: post.id,
           user_id: currentUserId,
         });
-        setRepostsCount((prev) => prev + 1);
         setIsReposted(true);
         toast.success("Reposted!");
       }
@@ -514,10 +506,6 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
             <MessageCircle className="h-4 w-4" />
             <span className="text-xs sm:text-sm">{formatNumber(commentsCount)}</span>
           </Button>
-          <div className="flex items-center gap-1 text-muted-foreground text-xs sm:text-sm px-2">
-            <Eye className="h-4 w-4" />
-            <span>{formatNumber(viewsCount)}</span>
-          </div>
         </div>
 
         {showComments && currentUserId && (
