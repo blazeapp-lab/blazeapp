@@ -77,6 +77,9 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
   const [isEditing, setIsEditing] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
+  const [isBrokenHearting, setIsBrokenHearting] = useState(false);
+  const [isReposting, setIsReposting] = useState(false);
 
   useEffect(() => {
     // Sync counters with prop values
@@ -146,6 +149,8 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
       navigate("/auth");
       return;
     }
+    if (isLiking) return; // Prevent spam clicking
+    setIsLiking(true);
     try {
       if (isLiked) {
         await supabase
@@ -191,6 +196,8 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
       }
     } catch (error: any) {
       toast.error("Failed to update like");
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -246,6 +253,8 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
       navigate("/auth");
       return;
     }
+    if (isBrokenHearting) return; // Prevent spam clicking
+    setIsBrokenHearting(true);
     try {
       if (isBrokenHearted) {
         await supabase
@@ -291,6 +300,8 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
       }
     } catch (error: any) {
       toast.error("Failed to update reaction");
+    } finally {
+      setIsBrokenHearting(false);
     }
   };
 
@@ -300,6 +311,8 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
       navigate("/auth");
       return;
     }
+    if (isReposting) return; // Prevent spam clicking
+    setIsReposting(true);
     try {
       if (isReposted) {
         await supabase
@@ -333,6 +346,8 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
       }
     } catch (error: any) {
       toast.error("Failed to repost");
+    } finally {
+      setIsReposting(false);
     }
   };
 

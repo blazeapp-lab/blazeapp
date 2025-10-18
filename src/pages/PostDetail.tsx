@@ -49,6 +49,9 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
+  const [isBrokenHearting, setIsBrokenHearting] = useState(false);
+  const [isReposting, setIsReposting] = useState(false);
 
   useEffect(() => {
     if (postId) {
@@ -164,6 +167,8 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
       navigate("/auth");
       return;
     }
+    if (isLiking) return; // Prevent spam clicking
+    setIsLiking(true);
     try {
       if (isLiked) {
         await supabase
@@ -204,6 +209,8 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
       }
     } catch (error: any) {
       toast.error("Failed to update like");
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -213,6 +220,8 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
       navigate("/auth");
       return;
     }
+    if (isBrokenHearting) return; // Prevent spam clicking
+    setIsBrokenHearting(true);
     try {
       if (isBrokenHearted) {
         await supabase
@@ -257,6 +266,8 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
       }
     } catch (error: any) {
       toast.error("Failed to update reaction");
+    } finally {
+      setIsBrokenHearting(false);
     }
   };
 
@@ -266,6 +277,8 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
       navigate("/auth");
       return;
     }
+    if (isReposting) return; // Prevent spam clicking
+    setIsReposting(true);
     try {
       if (isReposted) {
         await supabase
@@ -299,6 +312,8 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
       }
     } catch (error: any) {
       toast.error("Failed to repost");
+    } finally {
+      setIsReposting(false);
     }
   };
 
