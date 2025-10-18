@@ -43,20 +43,26 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   const [followersDialogTab, setFollowersDialogTab] = useState<"followers" | "following">("followers");
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlockedByUser, setIsBlockedByUser] = useState(false);
+  const [blockStatusLoading, setBlockStatusLoading] = useState(true);
 
   useEffect(() => {
-    if (userId) {
-      fetchProfile();
-      fetchFollowData();
-      fetchBlockStatus();
-    }
+    const initializeProfile = async () => {
+      if (userId) {
+        await Promise.all([
+          fetchProfile(),
+          fetchFollowData(),
+          fetchBlockStatus()
+        ]);
+      }
+    };
+    initializeProfile();
   }, [userId, currentUserId]);
 
   useEffect(() => {
-    if (profile) {
+    if (profile && !blockStatusLoading) {
       fetchUserPosts();
     }
-  }, [profile, isFollowing, currentUserId, isBlockedByUser]);
+  }, [profile, isFollowing, currentUserId, isBlockedByUser, blockStatusLoading]);
 
   const fetchProfile = async () => {
     try {
@@ -184,30 +190,41 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   };
 
   const fetchBlockStatus = async () => {
-    if (!currentUserId || !userId || currentUserId === userId) return;
+    if (!currentUserId || !userId || currentUserId === userId) {
+      setBlockStatusLoading(false);
+      return;
+    }
 
     try {
       // Check if current user blocked this profile
-      const { data: blockedData } = await (supabase as any)
+      const { data: blockedData, error: blockedError } = await (supabase as any)
         .from("blocks")
         .select("id")
         .eq("blocker_id", currentUserId)
         .eq("blocked_id", userId)
         .maybeSingle();
       
+      if (blockedError) {
+        console.error("Error checking if user blocked profile:", blockedError);
+      }
       setIsBlocked(!!blockedData);
 
       // Check if current user is blocked BY this profile
-      const { data: blockedByData } = await (supabase as any)
+      const { data: blockedByData, error: blockedByError } = await (supabase as any)
         .from("blocks")
         .select("id")
         .eq("blocker_id", userId)
         .eq("blocked_id", currentUserId)
         .maybeSingle();
       
+      if (blockedByError) {
+        console.error("Error checking if blocked by user:", blockedByError);
+      }
       setIsBlockedByUser(!!blockedByData);
     } catch (error) {
       console.error("Failed to fetch block status:", error);
+    } finally {
+      setBlockStatusLoading(false);
     }
   };
 
@@ -226,7 +243,10 @@ const Profile = ({ currentUserId }: ProfileProps) => {
           .eq("blocker_id", currentUserId)
           .eq("blocked_id", userId);
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error unblocking user:", error);
+          throw error;
+        }
         setIsBlocked(false);
         toast.success("User unblocked");
       } else {
@@ -237,11 +257,15 @@ const Profile = ({ currentUserId }: ProfileProps) => {
             blocked_id: userId,
           });
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error blocking user:", error);
+          throw error;
+        }
         setIsBlocked(true);
         toast.success("User blocked");
       }
     } catch (error: any) {
+      console.error("Block operation failed:", error);
       toast.error("Failed to update block status");
     }
   };
