@@ -17,6 +17,7 @@ const Settings = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -47,12 +48,13 @@ const Settings = () => {
       
       const { data: profile } = await supabase
         .from("profiles")
-        .select("username, avatar_url, banner_url, bio, is_private")
+        .select("username, display_name, avatar_url, banner_url, bio, is_private")
         .eq("id", user.id)
         .single();
       
       if (profile) {
         setUsername(profile.username);
+        setDisplayName(profile.display_name || "");
         setAvatarUrl(profile.avatar_url || "");
         setBannerUrl(profile.banner_url || "");
         setBio(profile.bio || "");
@@ -200,6 +202,25 @@ const Settings = () => {
         toast.error(error.message);
       } else {
         toast.success("Username updated successfully");
+      }
+    }
+    setLoading(false);
+  };
+
+  const handleUpdateDisplayName = async () => {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ display_name: displayName })
+        .eq("id", user.id);
+      
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Display name updated successfully");
       }
     }
     setLoading(false);
@@ -526,21 +547,22 @@ const Settings = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Username</CardTitle>
-            <CardDescription>Change your username</CardDescription>
+            <CardTitle>Display Name</CardTitle>
+            <CardDescription>Change your display name</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="displayName">Display Name</Label>
               <Input
-                id="username"
+                id="displayName"
                 type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Your display name"
               />
             </div>
-            <Button onClick={handleUpdateUsername} disabled={loading}>
-              Update Username
+            <Button onClick={handleUpdateDisplayName} disabled={loading}>
+              Update Display Name
             </Button>
           </CardContent>
         </Card>
