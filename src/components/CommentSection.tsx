@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { Loader2, User, Heart, Trash2 } from "lucide-react";
+import { Loader2, User, Heart, Trash2, Edit } from "lucide-react";
 import { z } from "zod";
 
 const commentSchema = z.object({
@@ -16,6 +16,7 @@ interface Comment {
   id: string;
   content: string;
   created_at: string;
+  updated_at: string;
   likes_count: number;
   parent_comment_id: string | null;
   user_id: string;
@@ -37,6 +38,8 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
   const [loading, setLoading] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
+  const [editingComment, setEditingComment] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
 
   useEffect(() => {
     fetchComments();
@@ -50,6 +53,7 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
         id,
         content,
         created_at,
+        updated_at,
         likes_count,
         parent_comment_id,
         user_id,
@@ -160,12 +164,45 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
     }
   };
 
+  const handleEditComment = async (commentId: string) => {
+    if (!editContent.trim()) {
+      toast.error("Comment cannot be empty");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const validatedData = commentSchema.parse({ content: editContent });
+      const { error } = await supabase
+        .from("comments")
+        .update({ content: validatedData.content })
+        .eq("id", commentId)
+        .eq("user_id", currentUserId);
+
+      if (error) throw error;
+
+      toast.success("Comment updated");
+      setEditingComment(null);
+      setEditContent("");
+      await fetchComments();
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error("Failed to update comment");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const topLevelComments = comments.filter(c => !c.parent_comment_id);
   const getReplies = (parentId: string) => comments.filter(c => c.parent_comment_id === parentId);
 
   const CommentItem = ({ comment, isReply = false }: { comment: Comment; isReply?: boolean }) => {
     const replies = getReplies(comment.id);
     const isLiked = likedComments.has(comment.id);
+    const isEditing = editingComment === comment.id;
 
     return (
       <div className={`space-y-2 ${isReply ? 'ml-10' : ''}`}>
@@ -184,37 +221,86 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
               <span className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
               </span>
-            </div>
-            <p className="text-sm mt-1">{comment.content}</p>
-            <div className="flex items-center gap-3 mt-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 gap-1 text-xs"
-                onClick={() => handleLikeComment(comment.id)}
-              >
-                <Heart className={`h-3 w-3 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
-                <span>{comment.likes_count}</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => setReplyingTo(comment.id)}
-              >
-                Reply
-              </Button>
-              {comment.user_id === currentUserId && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs text-destructive hover:text-destructive"
-                  onClick={() => handleDeleteComment(comment.id)}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+              {comment.updated_at !== comment.created_at && (
+                <span className="text-xs text-muted-foreground italic">(edited)</span>
               )}
             </div>
+            {isEditing ? (
+              <div className="mt-2 space-y-2">
+                <Textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="min-h-[60px] resize-none"
+                  disabled={loading}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handleEditComment(comment.id)}
+                    disabled={loading}
+                  >
+                    {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingComment(null);
+                      setEditContent("");
+                    }}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm mt-1">{comment.content}</p>
+                <div className="flex items-center gap-3 mt-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() => handleLikeComment(comment.id)}
+                  >
+                    <Heart className={`h-3 w-3 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
+                    <span>{comment.likes_count}</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => setReplyingTo(comment.id)}
+                  >
+                    Reply
+                  </Button>
+                  {comment.user_id === currentUserId && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => {
+                          setEditingComment(comment.id);
+                          setEditContent(comment.content);
+                        }}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteComment(comment.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
         {replies.length > 0 && (
