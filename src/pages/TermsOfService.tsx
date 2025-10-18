@@ -10,7 +10,7 @@ const TermsOfService = () => {
           reviewing our Privacy Policy before use.
         </p>
 
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 dark:text">
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
           <p className="font-semibold">
             IMPORTANT: THESE TERMS ARE PROVIDED FOR GUIDANCE AND ARE NOT A SUBSTITUTE FOR PROFESSIONAL LEGAL ADVICE.
           </p>
