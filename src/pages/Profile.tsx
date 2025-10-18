@@ -251,16 +251,24 @@ const Profile = ({ currentUserId }: ProfileProps) => {
             backgroundPosition: "center",
           }}
         >
-          {currentUserId === userId && (
-            <Button
-              variant="secondary"
-              size="icon"
-              onClick={() => navigate("/settings")}
-              className="absolute top-4 right-4"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-          )}
+          <div className="absolute top-4 right-4 flex gap-2">
+            {currentUserId === userId ? (
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={() => navigate("/settings")}
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button 
+                variant={isFollowing ? "secondary" : "default"} 
+                onClick={handleFollow}
+              >
+                {isFollowing ? "Unfollow" : "Follow"}
+              </Button>
+            )}
+          </div>
         </div>
         
         <div className="p-6">
@@ -271,20 +279,11 @@ const Profile = ({ currentUserId }: ProfileProps) => {
                 <User />
               </AvatarFallback>
             </Avatar>
-            <div className="mt-2">
-              {currentUserId === userId ? (
-                <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
-                  Edit Profile
-                </Button>
-              ) : (
-                <Button 
-                  variant={isFollowing ? "outline" : "default"} 
-                  onClick={handleFollow}
-                >
-                  {isFollowing ? "Unfollow" : "Follow"}
-                </Button>
-              )}
-            </div>
+            {currentUserId === userId && (
+              <Button variant="outline" onClick={() => setEditDialogOpen(true)} className="mt-2">
+                Edit Profile
+              </Button>
+            )}
           </div>
 
           <div className="space-y-3">
