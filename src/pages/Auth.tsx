@@ -153,6 +153,10 @@ const Auth = () => {
               <Link to="/terms" className="text-primary hover:underline">
                 Terms of Service
               </Link>
+              {" "}and{" "}
+              <Link to="/privacy" className="text-primary hover:underline">
+                Privacy Policy
+              </Link>
             </div>
           )}
           <div className="mt-4 text-center text-sm">
