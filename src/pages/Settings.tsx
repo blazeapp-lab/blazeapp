@@ -239,6 +239,18 @@ const Settings = () => {
   };
 
   const handleUpdateBio = async () => {
+    // Validate bio length and content
+    if (bio.length > 500) {
+      toast.error("Bio must be 500 characters or less");
+      return;
+    }
+    
+    // Check for malicious patterns
+    if (/\<script|javascript:|onerror=|on\w+=/i.test(bio)) {
+      toast.error("Bio contains disallowed patterns");
+      return;
+    }
+
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -303,8 +315,24 @@ const Settings = () => {
       return;
     }
     
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    // Enhanced password validation
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+    
+    if (!/[A-Z]/.test(newPassword)) {
+      toast.error("Password must contain at least one uppercase letter");
+      return;
+    }
+    
+    if (!/[a-z]/.test(newPassword)) {
+      toast.error("Password must contain at least one lowercase letter");
+      return;
+    }
+    
+    if (!/[0-9]/.test(newPassword)) {
+      toast.error("Password must contain at least one number");
       return;
     }
 

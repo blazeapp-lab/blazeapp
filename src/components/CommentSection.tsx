@@ -9,7 +9,13 @@ import { Loader2, User, Heart, Trash2, Edit } from "lucide-react";
 import { z } from "zod";
 
 const commentSchema = z.object({
-  content: z.string().trim().min(1, { message: "Comment cannot be empty" }).max(2000, { message: "Comment is too long (max 2000 characters)" }),
+  content: z.string()
+    .trim()
+    .min(1, { message: "Comment cannot be empty" })
+    .max(2000, { message: "Comment is too long (max 2000 characters)" })
+    .refine(val => !/\<script|javascript:|onerror=|on\w+=/i.test(val), {
+      message: 'Content contains disallowed patterns'
+    }),
 });
 
 interface Comment {

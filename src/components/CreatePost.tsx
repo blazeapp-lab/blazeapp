@@ -8,7 +8,13 @@ import { Loader2, Upload, X } from "lucide-react";
 import { z } from "zod";
 
 const postSchema = z.object({
-  content: z.string().trim().min(1, { message: "Post content cannot be empty" }).max(5000, { message: "Post is too long (max 5000 characters)" }),
+  content: z.string()
+    .trim()
+    .min(1, { message: "Post content cannot be empty" })
+    .max(5000, { message: "Post is too long (max 5000 characters)" })
+    .refine(val => !/\<script|javascript:|onerror=|on\w+=/i.test(val), {
+      message: 'Content contains disallowed patterns'
+    }),
 });
 
 const validateMediaFile = async (file: File): Promise<boolean> => {

@@ -10,6 +10,13 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
 
+const passwordSchema = z.string()
+  .min(8, { message: "Password must be at least 8 characters" })
+  .max(72, { message: "Password too long" })
+  .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
+  .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
+  .regex(/[0-9]/, { message: "Password must contain at least one number" });
+
 const emailLoginSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }).max(255, { message: "Email too long" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(72, { message: "Password too long" }),
@@ -20,12 +27,16 @@ const phoneLoginSchema = z.object({
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(72, { message: "Password too long" }),
 });
 
-const emailSignupSchema = emailLoginSchema.extend({
+const emailSignupSchema = z.object({
+  email: z.string().trim().email({ message: "Invalid email address" }).max(255, { message: "Email too long" }),
+  password: passwordSchema,
   username: z.string().trim().min(1, { message: "Username is required" }).max(16, { message: "Username must be 16 characters or less" }).regex(/^[a-zA-Z0-9_.]+$/, { message: "Username can only contain letters, numbers, underscores, and periods" }),
   displayName: z.string().trim().min(1, { message: "Display name is required" }).max(50, { message: "Display name too long" }),
 });
 
-const phoneSignupSchema = phoneLoginSchema.extend({
+const phoneSignupSchema = z.object({
+  phone: z.string().trim().min(10, { message: "Invalid phone number" }).max(20, { message: "Phone number too long" }),
+  password: passwordSchema,
   username: z.string().trim().min(1, { message: "Username is required" }).max(16, { message: "Username must be 16 characters or less" }).regex(/^[a-zA-Z0-9_.]+$/, { message: "Username can only contain letters, numbers, underscores, and periods" }),
   displayName: z.string().trim().min(1, { message: "Display name is required" }).max(50, { message: "Display name too long" }),
 });
