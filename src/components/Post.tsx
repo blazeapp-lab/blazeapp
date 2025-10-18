@@ -487,22 +487,24 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 px-2 min-w-0"
+            className="gap-1 h-8 px-2 min-w-0"
             onClick={handleLike}
           >
             <Heart
               className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
             />
+            <span className="text-xs sm:text-sm">{formatNumber(likesCount)}</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 px-2 min-w-0"
+            className="gap-1 h-8 px-2 min-w-0"
             onClick={handleBrokenHeart}
           >
             <ThumbsDown
               className={`h-4 w-4 ${isBrokenHearted ? "fill-blue-500 text-blue-500" : ""}`}
             />
+            <span className="text-xs sm:text-sm">{formatNumber(brokenHeartsCount)}</span>
           </Button>
           {currentUserId ? (
             <DropdownMenu>
@@ -510,11 +512,12 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2 min-w-0"
+                className="gap-1 h-8 px-2 min-w-0"
               >
                 <Repeat2
                   className={`h-4 w-4 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
                 />
+                <span className="text-xs sm:text-sm">{formatNumber(repostsCount)}</span>
               </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -528,22 +531,24 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-2 min-w-0"
+              className="gap-1 h-8 px-2 min-w-0"
               onClick={() => {
                 toast.error("Please sign in to repost");
                 navigate("/auth");
               }}
             >
               <Repeat2 className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">{formatNumber(repostsCount)}</span>
             </Button>
           )}
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 px-2 min-w-0"
+            className="gap-1 h-8 px-2 min-w-0"
             onClick={handleCommentClick}
           >
             <MessageCircle className="h-4 w-4" />
+            <span className="text-xs sm:text-sm">{formatNumber(commentsCount)}</span>
           </Button>
         </div>
 

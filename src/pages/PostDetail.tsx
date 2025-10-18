@@ -473,35 +473,43 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           <Button
             variant="ghost"
             size="sm"
+            className="gap-2"
             onClick={handleLike}
           >
             <Heart
               className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
             />
+            <span>{formatNumber(likesCount)}</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
+            className="gap-2"
             onClick={handleBrokenHeart}
           >
             <ThumbsDown
               className={`h-5 w-5 ${isBrokenHearted ? "fill-blue-500 text-blue-500" : ""}`}
             />
+            <span>{formatNumber(brokenHeartsCount)}</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
+            className="gap-2"
             onClick={handleRepost}
           >
             <Repeat2
               className={`h-5 w-5 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
             />
+            <span>{formatNumber(repostsCount)}</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
+            className="gap-2"
           >
             <MessageCircle className="h-5 w-5" />
+            <span>{formatNumber(commentsCount)}</span>
           </Button>
         </div>
 
