@@ -70,6 +70,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
   const [isReposted, setIsReposted] = useState(false);
   const [repostsCount, setRepostsCount] = useState(post.reposts_count);
   const [viewsCount, setViewsCount] = useState(post.views_count);
+  const [commentsCount, setCommentsCount] = useState(post.comments_count);
   const [showComments, setShowComments] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -82,6 +83,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
     setBrokenHeartsCount(post.broken_hearts_count);
     setRepostsCount(post.reposts_count);
     setViewsCount(post.views_count);
+    setCommentsCount(post.comments_count);
     
     if (currentUserId) {
       checkIfLiked();
@@ -108,6 +110,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           setBrokenHeartsCount(newPost.broken_hearts_count);
           setRepostsCount(newPost.reposts_count);
           setViewsCount(newPost.views_count);
+          setCommentsCount(newPost.comments_count);
         }
       )
       .subscribe();
@@ -509,7 +512,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
             onClick={handleCommentClick}
           >
             <MessageCircle className="h-4 w-4" />
-            <span className="text-xs sm:text-sm">{formatNumber(post.comments_count)}</span>
+            <span className="text-xs sm:text-sm">{formatNumber(commentsCount)}</span>
           </Button>
           <div className="flex items-center gap-1 text-muted-foreground text-xs sm:text-sm px-2">
             <Eye className="h-4 w-4" />

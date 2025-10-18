@@ -152,7 +152,7 @@ const Home = ({ currentUserId }: HomeProps) => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
+    <div className="max-w-2xl mx-auto space-y-4 pt-2 sm:pt-4">
       <h1 className="text-2xl font-bold">Home</h1>
       
       {currentUserId && <CreatePost userId={currentUserId} onPostCreated={fetchPosts} />}
