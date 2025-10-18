@@ -34,18 +34,6 @@ const Home = ({ currentUserId }: HomeProps) => {
               display_name,
               avatar_url,
               is_private
-            ),
-            quoted_post:posts!posts_quoted_post_id_fkey (
-              id,
-              content,
-              image_url,
-              created_at,
-              profiles (
-                id,
-                username,
-                display_name,
-                avatar_url
-              )
             )
           `)
           .gte("created_at", oneWeekAgo.toISOString())
@@ -54,7 +42,31 @@ const Home = ({ currentUserId }: HomeProps) => {
           .limit(50);
 
         if (error) throw error;
-        setPosts(data || []);
+        
+        // Fetch quoted posts separately
+        const postsWithQuotes = await Promise.all((data || []).map(async (post) => {
+          if (post.quoted_post_id) {
+            const { data: quotedPost } = await supabase
+              .from("posts")
+              .select(`
+                id,
+                content,
+                image_url,
+                created_at,
+                profiles (
+                  id,
+                  username,
+                  display_name,
+                  avatar_url
+                )
+              `)
+              .eq("id", post.quoted_post_id)
+              .single();
+            return { ...post, quoted_post: quotedPost };
+          }
+          return post;
+        }));
+        setPosts(postsWithQuotes);
         return;
       }
 
@@ -82,18 +94,6 @@ const Home = ({ currentUserId }: HomeProps) => {
               display_name,
               avatar_url,
               is_private
-            ),
-            quoted_post:posts!posts_quoted_post_id_fkey (
-              id,
-              content,
-              image_url,
-              created_at,
-              profiles (
-                id,
-                username,
-                display_name,
-                avatar_url
-              )
             )
           `)
           .in("user_id", followingIds)
@@ -101,7 +101,29 @@ const Home = ({ currentUserId }: HomeProps) => {
           .order("created_at", { ascending: false })
           .limit(25);
         
-        followedPosts = data || [];
+        // Fetch quoted posts for followed posts
+        followedPosts = await Promise.all((data || []).map(async (post) => {
+          if (post.quoted_post_id) {
+            const { data: quotedPost } = await supabase
+              .from("posts")
+              .select(`
+                id,
+                content,
+                image_url,
+                created_at,
+                profiles (
+                  id,
+                  username,
+                  display_name,
+                  avatar_url
+                )
+              `)
+              .eq("id", post.quoted_post_id)
+              .maybeSingle();
+            return { ...post, quoted_post: quotedPost };
+          }
+          return post;
+        }));
       }
 
       // Fetch trending posts from this week (high engagement)
@@ -118,25 +140,35 @@ const Home = ({ currentUserId }: HomeProps) => {
             display_name,
             avatar_url,
             is_private
-          ),
-          quoted_post:posts!posts_quoted_post_id_fkey (
-            id,
-            content,
-            image_url,
-            created_at,
-            profiles (
-              id,
-              username,
-              display_name,
-              avatar_url
-            )
           )
         `)
         .gte("created_at", oneWeekAgo.toISOString())
         .order("likes_count", { ascending: false })
         .limit(30);
 
-      let trendingPosts = trendingData || [];
+      // Fetch quoted posts for trending posts
+      let trendingPosts = await Promise.all((trendingData || []).map(async (post) => {
+        if (post.quoted_post_id) {
+          const { data: quotedPost } = await supabase
+            .from("posts")
+            .select(`
+              id,
+              content,
+              image_url,
+              created_at,
+              profiles (
+                id,
+                username,
+                display_name,
+                avatar_url
+              )
+            `)
+            .eq("id", post.quoted_post_id)
+            .maybeSingle();
+          return { ...post, quoted_post: quotedPost };
+        }
+        return post;
+      }));
       
       // Filter trending posts for privacy
       trendingPosts = trendingPosts.filter(post => 
