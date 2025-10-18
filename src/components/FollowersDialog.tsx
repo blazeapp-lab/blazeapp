@@ -24,6 +24,51 @@ interface UserProfile {
   isFollowing?: boolean;
 }
 
+interface UserListProps {
+  users: UserProfile[];
+  currentUserId: string | undefined;
+  onNavigate: (userId: string) => void;
+  onFollow: (profileId: string) => void;
+  onUnfollow: (profileId: string) => void;
+}
+
+const UserList = ({ users, currentUserId, onNavigate, onFollow, onUnfollow }: UserListProps) => (
+  <div className="space-y-3 max-h-[400px] overflow-y-auto">
+    {users.length === 0 ? (
+      <p className="text-center text-muted-foreground py-8">No users found</p>
+    ) : (
+      users.map((user) => (
+        <div key={user.id} className="flex items-center justify-between py-2">
+          <div 
+            className="flex items-center gap-3 cursor-pointer flex-1"
+            onClick={() => onNavigate(user.id)}
+          >
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={user.avatar_url || undefined} />
+              <AvatarFallback>
+                <User className="h-5 w-5" />
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-semibold">{user.display_name || user.username}</p>
+              <p className="text-sm text-muted-foreground">@{user.username}</p>
+            </div>
+          </div>
+          {currentUserId && currentUserId !== user.id && (
+            <Button
+              variant={user.isFollowing ? "outline" : "default"}
+              size="sm"
+              onClick={() => user.isFollowing ? onUnfollow(user.id) : onFollow(user.id)}
+            >
+              {user.isFollowing ? "Unfollow" : "Follow"}
+            </Button>
+          )}
+        </div>
+      ))
+    )}
+  </div>
+);
+
 const FollowersDialog = ({ open, onOpenChange, userId, currentUserId, defaultTab = "followers" }: FollowersDialogProps) => {
   const navigate = useNavigate();
   const [followers, setFollowers] = useState<UserProfile[]>([]);
@@ -169,45 +214,10 @@ const FollowersDialog = ({ open, onOpenChange, userId, currentUserId, defaultTab
     }
   };
 
-  const UserList = ({ users }: { users: UserProfile[] }) => (
-    <div className="space-y-3 max-h-[400px] overflow-y-auto">
-      {users.length === 0 ? (
-        <p className="text-center text-muted-foreground py-8">No users found</p>
-      ) : (
-        users.map((user) => (
-          <div key={user.id} className="flex items-center justify-between py-2">
-            <div 
-              className="flex items-center gap-3 cursor-pointer flex-1"
-              onClick={() => {
-                navigate(`/profile/${user.id}`);
-                onOpenChange(false);
-              }}
-            >
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={user.avatar_url || undefined} />
-                <AvatarFallback>
-                  <User className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-semibold">{user.display_name || user.username}</p>
-                <p className="text-sm text-muted-foreground">@{user.username}</p>
-              </div>
-            </div>
-            {currentUserId && currentUserId !== user.id && (
-              <Button
-                variant={user.isFollowing ? "outline" : "default"}
-                size="sm"
-                onClick={() => user.isFollowing ? handleUnfollow(user.id) : handleFollow(user.id)}
-              >
-                {user.isFollowing ? "Unfollow" : "Follow"}
-              </Button>
-            )}
-          </div>
-        ))
-      )}
-    </div>
-  );
+  const handleNavigate = (userId: string) => {
+    navigate(`/profile/${userId}`);
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -224,14 +234,26 @@ const FollowersDialog = ({ open, onOpenChange, userId, currentUserId, defaultTab
             {loading ? (
               <p className="text-center py-8">Loading...</p>
             ) : (
-              <UserList users={followers} />
+              <UserList 
+                users={followers} 
+                currentUserId={currentUserId}
+                onNavigate={handleNavigate}
+                onFollow={handleFollow}
+                onUnfollow={handleUnfollow}
+              />
             )}
           </TabsContent>
           <TabsContent value="following" className="mt-4">
             {loading ? (
               <p className="text-center py-8">Loading...</p>
             ) : (
-              <UserList users={following} />
+              <UserList 
+                users={following} 
+                currentUserId={currentUserId}
+                onNavigate={handleNavigate}
+                onFollow={handleFollow}
+                onUnfollow={handleUnfollow}
+              />
             )}
           </TabsContent>
         </Tabs>
