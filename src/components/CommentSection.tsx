@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { Loader2, User, Heart } from "lucide-react";
+import { Loader2, User, Heart, Trash2 } from "lucide-react";
 import { z } from "zod";
 
 const commentSchema = z.object({
@@ -18,6 +18,7 @@ interface Comment {
   created_at: string;
   likes_count: number;
   parent_comment_id: string | null;
+  user_id: string;
   profiles: {
     username: string;
     display_name: string | null;
@@ -51,6 +52,7 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
         created_at,
         likes_count,
         parent_comment_id,
+        user_id,
         profiles (
           username,
           display_name,
@@ -137,6 +139,27 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm("Are you sure you want to delete this comment?")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("comments")
+        .delete()
+        .eq("id", commentId)
+        .eq("user_id", currentUserId);
+
+      if (error) throw error;
+
+      toast.success("Comment deleted");
+      await fetchComments();
+    } catch (error: any) {
+      toast.error("Failed to delete comment");
+    }
+  };
+
   const topLevelComments = comments.filter(c => !c.parent_comment_id);
   const getReplies = (parentId: string) => comments.filter(c => c.parent_comment_id === parentId);
 
@@ -181,6 +204,16 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
               >
                 Reply
               </Button>
+              {comment.user_id === currentUserId && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-destructive hover:text-destructive"
+                  onClick={() => handleDeleteComment(comment.id)}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
             </div>
           </div>
         </div>
