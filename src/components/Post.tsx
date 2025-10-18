@@ -349,17 +349,17 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
   return (
     <>
       <Card 
-        className="p-3 space-y-2 hover:bg-secondary/50 transition-colors cursor-pointer" 
+        className="p-4 space-y-3 hover:bg-secondary/50 transition-colors cursor-pointer" 
         onClick={handlePostClick}
       >
-        <div className="flex items-start gap-2.5">
+        <div className="flex items-start gap-3">
           <Avatar 
-            className="cursor-pointer h-9 w-9" 
+            className="cursor-pointer" 
             onClick={() => navigate(`/profile/${post.profiles.id}`)}
           >
             <AvatarImage src={post.profiles.avatar_url || undefined} />
             <AvatarFallback>
-              <User className="h-3.5 w-3.5" />
+              <User className="h-4 w-4" />
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
@@ -424,7 +424,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
                 </>
               )}
             </div>
-            <p className="mt-1.5 text-sm whitespace-pre-wrap break-words">
+            <p className="mt-2 whitespace-pre-wrap break-words">
               {parseMentions(post.content)}
             </p>
             {post.image_url && (
@@ -433,13 +433,13 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
                   <video
                     src={post.image_url}
                     controls
-                    className="mt-2 rounded-lg max-h-80 w-full"
+                    className="mt-3 rounded-lg max-h-96 w-full"
                   />
                 ) : (
                   <img
                     src={post.image_url}
                     alt="Post media"
-                    className="mt-2 rounded-lg max-h-80 w-full object-cover"
+                    className="mt-3 rounded-lg max-h-96 w-full object-cover"
                   />
                 )}
               </>
@@ -447,28 +447,28 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           </div>
         </div>
         
-        <div className="flex items-center justify-between sm:justify-start sm:gap-2 pt-1.5">
+        <div className="flex items-center justify-between sm:justify-start sm:gap-3 pt-2">
           <Button
             variant="ghost"
             size="sm"
-            className="gap-0.5 h-7 px-1.5 min-w-0"
+            className="gap-1 h-8 px-2 min-w-0"
             onClick={handleLike}
           >
             <Heart
-              className={`h-3.5 w-3.5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+              className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
             />
-            <span className="text-xs">{formatNumber(likesCount)}</span>
+            <span className="text-xs sm:text-sm">{formatNumber(likesCount)}</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="gap-0.5 h-7 px-1.5 min-w-0"
+            className="gap-1 h-8 px-2 min-w-0"
             onClick={handleBrokenHeart}
           >
             <ThumbsDown
-              className={`h-3.5 w-3.5 ${isBrokenHearted ? "fill-blue-500 text-blue-500" : ""}`}
+              className={`h-4 w-4 ${isBrokenHearted ? "fill-blue-500 text-blue-500" : ""}`}
             />
-            <span className="text-xs">{formatNumber(brokenHeartsCount)}</span>
+            <span className="text-xs sm:text-sm">{formatNumber(brokenHeartsCount)}</span>
           </Button>
           {currentUserId ? (
             <DropdownMenu>
@@ -476,12 +476,12 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
               <Button
                 variant="ghost"
                 size="sm"
-                className="gap-0.5 h-7 px-1.5 min-w-0"
+                className="gap-1 h-8 px-2 min-w-0"
               >
                 <Repeat2
-                  className={`h-3.5 w-3.5 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
+                  className={`h-4 w-4 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
                 />
-                <span className="text-xs">{formatNumber(repostsCount)}</span>
+                <span className="text-xs sm:text-sm">{formatNumber(repostsCount)}</span>
               </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -495,27 +495,27 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
             <Button
               variant="ghost"
               size="sm"
-              className="gap-0.5 h-7 px-1.5 min-w-0"
+              className="gap-1 h-8 px-2 min-w-0"
               onClick={() => {
                 toast.error("Please sign in to repost");
                 navigate("/auth");
               }}
             >
-              <Repeat2 className="h-3.5 w-3.5" />
-              <span className="text-xs">{formatNumber(repostsCount)}</span>
+              <Repeat2 className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">{formatNumber(repostsCount)}</span>
             </Button>
           )}
           <Button
             variant="ghost"
             size="sm"
-            className="gap-0.5 h-7 px-1.5 min-w-0"
+            className="gap-1 h-8 px-2 min-w-0"
             onClick={handleCommentClick}
           >
-            <MessageCircle className="h-3.5 w-3.5" />
-            <span className="text-xs">{formatNumber(commentsCount)}</span>
+            <MessageCircle className="h-4 w-4" />
+            <span className="text-xs sm:text-sm">{formatNumber(commentsCount)}</span>
           </Button>
-          <div className="flex items-center gap-0.5 text-muted-foreground text-xs px-1.5">
-            <Eye className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-1 text-muted-foreground text-xs sm:text-sm px-2">
+            <Eye className="h-4 w-4" />
             <span>{formatNumber(viewsCount)}</span>
           </div>
         </div>
