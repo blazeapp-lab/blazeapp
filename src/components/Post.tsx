@@ -21,12 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -88,7 +83,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
     setRepostsCount(post.reposts_count);
     setViewsCount(post.views_count);
     setCommentsCount(post.comments_count);
-    
+
     if (currentUserId) {
       checkIfLiked();
       checkIfBrokenHearted();
@@ -114,118 +109,143 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         }
       }
     };
-    
-    window.addEventListener('blaze:update-post', handlePostUpdate as EventListener);
-    return () => window.removeEventListener('blaze:update-post', handlePostUpdate as EventListener);
+
+    window.addEventListener("blaze:update-post", handlePostUpdate as EventListener);
+    return () => window.removeEventListener("blaze:update-post", handlePostUpdate as EventListener);
   }, [post.id]);
 
-  const trackView = async () => {
+  const trackView = async (): Promise<void> => {
     try {
-      await supabase.from("post_views").insert({
+      const { error } = await supabase.from("post_views").insert({
         post_id: post.id,
         user_id: currentUserId || null,
       });
+
+      if (error) throw error;
+
       setViewsCount((prev) => prev + 1);
-    } catch (error) {
-      // Ignore duplicate view errors
+    } catch {
+      // Ignore duplicate view errors silently
     }
   };
 
-  const checkIfLiked = async () => {
+  const checkIfLiked = async (): Promise<void> => {
     if (!currentUserId) return;
-    const { data } = await supabase
+
+    const { data, error } = await supabase
       .from("likes")
       .select("id")
       .eq("post_id", post.id)
       .eq("user_id", currentUserId)
       .maybeSingle();
+
+    if (error) {
+      console.error("Error checking like status:", error.message);
+      return;
+    }
+
     setIsLiked(!!data);
   };
 
-  const checkIfBrokenHearted = async () => {
+  const checkIfBrokenHearted = async (): Promise<void> => {
     if (!currentUserId) return;
-    const { data } = await supabase
+
+    const { data, error } = await supabase
       .from("broken_hearts")
       .select("id")
       .eq("post_id", post.id)
       .eq("user_id", currentUserId)
       .maybeSingle();
+
+    if (error) {
+      console.error("Error checking broken heart status:", error.message);
+      return;
+    }
+
     setIsBrokenHearted(!!data);
   };
 
-  const checkIfReposted = async () => {
+  const checkIfReposted = async (): Promise<void> => {
     if (!currentUserId) return;
-    const { data } = await supabase
+
+    const { data, error } = await supabase
       .from("reposts")
       .select("id")
       .eq("post_id", post.id)
       .eq("user_id", currentUserId)
       .maybeSingle();
+
+    if (error) {
+      console.error("Error checking repost status:", error.message);
+      return;
+    }
+
     setIsReposted(!!data);
   };
 
-  const handleLike = async () => {
+  const handleLike = async (): Promise<void> => {
     if (!currentUserId) {
       toast.error("Please sign in to like posts");
       navigate("/auth");
       return;
     }
+
     if (isLiking) return; // Prevent spam clicking
     setIsLiking(true);
-    
+
     const previousLikeState = isLiked;
     const previousCount = likesCount;
-    
+
     try {
       if (isLiked) {
         // Optimistic update
         setIsLiked(false);
         const newCount = Math.max(0, likesCount - 1);
         setLikesCount(newCount);
-        
-        const { error } = await supabase
-          .from("likes")
-          .delete()
-          .eq("post_id", post.id)
-          .eq("user_id", currentUserId);
-          
+
+        const { error } = await supabase.from("likes").delete().eq("post_id", post.id).eq("user_id", currentUserId);
+
         if (error) throw error;
-        
+
         emitPostUpdate({ postId: post.id, likes_count: newCount });
-        sessionStorage.setItem("blaze:refresh-feed", "1");
-        window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
-        // If user has disliked, remove the dislike first
+        // Remove dislike first if needed
         if (isBrokenHearted) {
-          await supabase
+          const { error: bhError } = await supabase
             .from("broken_hearts")
             .delete()
             .eq("post_id", post.id)
             .eq("user_id", currentUserId);
-          setIsBrokenHearted(false);
-          const newBhCount = Math.max(0, brokenHeartsCount - 1);
-          setBrokenHeartsCount(newBhCount);
-          emitPostUpdate({ postId: post.id, broken_hearts_count: newBhCount });
+
+          if (!bhError) {
+            setIsBrokenHearted(false);
+            const newBhCount = Math.max(0, brokenHeartsCount - 1);
+            setBrokenHeartsCount(newBhCount);
+            emitPostUpdate({ postId: post.id, broken_hearts_count: newBhCount });
+          }
         }
-        
-        // Optimistic update
+
+        // Optimistic like
         setIsLiked(true);
         const newCount = likesCount + 1;
         setLikesCount(newCount);
-        
+
         const { error } = await supabase.from("likes").insert({
           post_id: post.id,
           user_id: currentUserId,
         });
-        
+
         if (error) throw error;
-        
+
         emitPostUpdate({ postId: post.id, likes_count: newCount });
-        sessionStorage.setItem("blaze:refresh-feed", "1");
-        window.dispatchEvent(new Event("blaze:refresh-feed"));
       }
-    } catch (error: any) {
-      // Rollback on error
+
+      // Trigger feed refresh
+      sessionStorage.setItem("blaze:refresh-feed", "1");
+      window.dispatchEvent(new Event("blaze:refresh-feed"));
+    } catch (error) {
+      console.error("Like update failed:", error);
+      // Rollback optimistic update
       setIsLiked(previousLikeState);
       setLikesCount(previousCount);
       toast.error("Failed to update like");
@@ -236,10 +256,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
 
   const handleDelete = async () => {
     try {
-      const { error } = await supabase
-        .from("posts")
-        .delete()
-        .eq("id", post.id);
+      const { error } = await supabase.from("posts").delete().eq("id", post.id);
 
       if (error) throw error;
 
@@ -255,13 +272,13 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
 
   const handleEdit = async () => {
     const trimmedContent = editContent.trim();
-    
+
     // Content validation
     if (!trimmedContent) {
       toast.error("Post content cannot be empty");
       return;
     }
-    
+
     // Prevent extremely long posts (max 5000 chars)
     if (trimmedContent.length > 5000) {
       toast.error("Post content is too long (max 5000 characters)");
@@ -270,10 +287,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
 
     setIsEditing(true);
     try {
-      const { error } = await supabase
-        .from("posts")
-        .update({ content: trimmedContent })
-        .eq("id", post.id);
+      const { error } = await supabase.from("posts").update({ content: trimmedContent }).eq("id", post.id);
 
       if (error) throw error;
 
@@ -297,54 +311,50 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
     }
     if (isBrokenHearting) return; // Prevent spam clicking
     setIsBrokenHearting(true);
-    
+
     const previousState = isBrokenHearted;
     const previousCount = brokenHeartsCount;
-    
+
     try {
       if (isBrokenHearted) {
         // Optimistic update
         setIsBrokenHearted(false);
         const newCount = Math.max(0, brokenHeartsCount - 1);
         setBrokenHeartsCount(newCount);
-        
+
         const { error } = await supabase
           .from("broken_hearts")
           .delete()
           .eq("post_id", post.id)
           .eq("user_id", currentUserId);
-          
+
         if (error) throw error;
-        
+
         emitPostUpdate({ postId: post.id, broken_hearts_count: newCount });
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
         // If user has liked, remove the like first
         if (isLiked) {
-          await supabase
-            .from("likes")
-            .delete()
-            .eq("post_id", post.id)
-            .eq("user_id", currentUserId);
+          await supabase.from("likes").delete().eq("post_id", post.id).eq("user_id", currentUserId);
           setIsLiked(false);
           const newLikeCount = Math.max(0, likesCount - 1);
           setLikesCount(newLikeCount);
           emitPostUpdate({ postId: post.id, likes_count: newLikeCount });
         }
-        
+
         // Optimistic update
         setIsBrokenHearted(true);
         const newCount = brokenHeartsCount + 1;
         setBrokenHeartsCount(newCount);
-        
+
         const { error } = await supabase.from("broken_hearts").insert({
           post_id: post.id,
           user_id: currentUserId,
         });
-        
+
         if (error) throw error;
-        
+
         emitPostUpdate({ postId: post.id, broken_hearts_count: newCount });
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
@@ -367,25 +377,21 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
     }
     if (isReposting) return; // Prevent spam clicking
     setIsReposting(true);
-    
+
     const previousState = isReposted;
     const previousCount = repostsCount;
-    
+
     try {
       if (isReposted) {
         // Optimistic update
         setIsReposted(false);
         const newCount = Math.max(0, repostsCount - 1);
         setRepostsCount(newCount);
-        
-        const { error } = await supabase
-          .from("reposts")
-          .delete()
-          .eq("post_id", post.id)
-          .eq("user_id", currentUserId);
-          
+
+        const { error } = await supabase.from("reposts").delete().eq("post_id", post.id).eq("user_id", currentUserId);
+
         if (error) throw error;
-        
+
         emitPostUpdate({ postId: post.id, reposts_count: newCount });
         toast.success("Repost removed");
         sessionStorage.setItem("blaze:refresh-feed", "1");
@@ -395,14 +401,14 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         setIsReposted(true);
         const newCount = repostsCount + 1;
         setRepostsCount(newCount);
-        
+
         const { error } = await supabase.from("reposts").insert({
           post_id: post.id,
           user_id: currentUserId,
         });
-        
+
         if (error) throw error;
-        
+
         emitPostUpdate({ postId: post.id, reposts_count: newCount });
         toast.success("Reposted!");
         sessionStorage.setItem("blaze:refresh-feed", "1");
@@ -429,12 +435,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
 
   const handlePostClick = async (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (
-      target.closest('button') || 
-      target.closest('a') || 
-      target.closest('img') ||
-      target.closest('video')
-    ) {
+    if (target.closest("button") || target.closest("a") || target.closest("img") || target.closest("video")) {
       return;
     }
 
@@ -451,15 +452,9 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
 
   return (
     <>
-      <Card 
-        className="p-4 space-y-3 hover:bg-secondary/50 transition-colors cursor-pointer" 
-        onClick={handlePostClick}
-      >
+      <Card className="p-4 space-y-3 hover:bg-secondary/50 transition-colors cursor-pointer" onClick={handlePostClick}>
         <div className="flex items-start gap-3">
-          <Avatar 
-            className="cursor-pointer" 
-            onClick={() => navigate(`/profile/${post.profiles.id}`)}
-          >
+          <Avatar className="cursor-pointer" onClick={() => navigate(`/profile/${post.profiles.id}`)}>
             <AvatarImage src={post.profiles.avatar_url || undefined} />
             <AvatarFallback>
               <User className="h-4 w-4" />
@@ -467,15 +462,13 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           </Avatar>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1">
-              <span 
+              <span
                 className="text-sm font-semibold hover:underline cursor-pointer"
                 onClick={() => navigate(`/profile/${post.profiles.id}`)}
               >
                 {post.profiles.display_name || post.profiles.username}
               </span>
-              <span className="text-xs text-muted-foreground">
-                @{post.profiles.username}
-              </span>
+              <span className="text-xs text-muted-foreground">@{post.profiles.username}</span>
               <span className="text-xs text-muted-foreground">·</span>
               <span className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
@@ -488,22 +481,13 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
               )}
             </div>
             <div className="flex gap-2 mt-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleShare}
-              >
+              <Button variant="ghost" size="sm" onClick={handleShare}>
                 <Share2 className="h-4 w-4" />
               </Button>
               {currentUserId === post.user_id && (
                 <>
                   {showPinButton && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={onPin}
-                      title={isPinned ? "Unpin post" : "Pin post"}
-                    >
+                    <Button variant="ghost" size="sm" onClick={onPin} title={isPinned ? "Unpin post" : "Pin post"}>
                       <Pin className={`h-4 w-4 ${isPinned ? "fill-current" : ""}`} />
                     </Button>
                   )}
@@ -517,75 +501,41 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowDeleteDialog(true)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteDialog(true)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </>
               )}
             </div>
-            <p className="mt-2 whitespace-pre-wrap break-words">
-              {parseMentions(post.content)}
-            </p>
+            <p className="mt-2 whitespace-pre-wrap break-words">{parseMentions(post.content)}</p>
             {post.image_url && (
               <>
                 {post.image_url.match(/\.(mp4|webm|mov|quicktime)$/i) ? (
-                  <video
-                    src={post.image_url}
-                    controls
-                    className="mt-3 rounded-lg max-h-96 w-full"
-                  />
+                  <video src={post.image_url} controls className="mt-3 rounded-lg max-h-96 w-full" />
                 ) : (
-                  <img
-                    src={post.image_url}
-                    alt="Post media"
-                    className="mt-3 rounded-lg max-h-96 w-full object-cover"
-                  />
+                  <img src={post.image_url} alt="Post media" className="mt-3 rounded-lg max-h-96 w-full object-cover" />
                 )}
               </>
             )}
           </div>
         </div>
-        
+
         <div className="flex items-center justify-between sm:justify-start sm:gap-3 pt-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1 h-8 px-2 min-w-0"
-            onClick={handleLike}
-          >
-            <Heart
-              className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
-            />
+          <Button variant="ghost" size="sm" className="gap-1 h-8 px-2 min-w-0" onClick={handleLike}>
+            <Heart className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
             <span className="text-xs sm:text-sm">{formatNumber(likesCount)}</span>
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1 h-8 px-2 min-w-0"
-            onClick={handleBrokenHeart}
-          >
-            <ThumbsDown
-              className={`h-4 w-4 ${isBrokenHearted ? "fill-blue-500 text-blue-500" : ""}`}
-            />
+          <Button variant="ghost" size="sm" className="gap-1 h-8 px-2 min-w-0" onClick={handleBrokenHeart}>
+            <ThumbsDown className={`h-4 w-4 ${isBrokenHearted ? "fill-blue-500 text-blue-500" : ""}`} />
             <span className="text-xs sm:text-sm">{formatNumber(brokenHeartsCount)}</span>
           </Button>
           {currentUserId ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1 h-8 px-2 min-w-0"
-              >
-                <Repeat2
-                  className={`h-4 w-4 ${isReposted ? "fill-green-500 text-green-500" : ""}`}
-                />
-                <span className="text-xs sm:text-sm">{formatNumber(repostsCount)}</span>
-              </Button>
+                <Button variant="ghost" size="sm" className="gap-1 h-8 px-2 min-w-0">
+                  <Repeat2 className={`h-4 w-4 ${isReposted ? "fill-green-500 text-green-500" : ""}`} />
+                  <span className="text-xs sm:text-sm">{formatNumber(repostsCount)}</span>
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={handleRepost}>
@@ -608,20 +558,13 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
               <span className="text-xs sm:text-sm">{formatNumber(repostsCount)}</span>
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1 h-8 px-2 min-w-0"
-            onClick={handleCommentClick}
-          >
+          <Button variant="ghost" size="sm" className="gap-1 h-8 px-2 min-w-0" onClick={handleCommentClick}>
             <MessageCircle className="h-4 w-4" />
             <span className="text-xs sm:text-sm">{formatNumber(commentsCount)}</span>
           </Button>
         </div>
 
-        {showComments && currentUserId && (
-          <CommentSection postId={post.id} currentUserId={currentUserId} />
-        )}
+        {showComments && currentUserId && <CommentSection postId={post.id} currentUserId={currentUserId} />}
       </Card>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -634,7 +577,10 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
