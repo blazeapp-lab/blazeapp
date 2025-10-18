@@ -271,18 +271,20 @@ const Profile = ({ currentUserId }: ProfileProps) => {
                 <User />
               </AvatarFallback>
             </Avatar>
-            {currentUserId === userId ? (
-              <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
-                Edit Profile
-              </Button>
-            ) : currentUserId ? (
-              <Button 
-                variant={isFollowing ? "outline" : "default"} 
-                onClick={handleFollow}
-              >
-                {isFollowing ? "Unfollow" : "Follow"}
-              </Button>
-            ) : null}
+            <div className="mt-2">
+              {currentUserId === userId ? (
+                <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
+                  Edit Profile
+                </Button>
+              ) : (
+                <Button 
+                  variant={isFollowing ? "outline" : "default"} 
+                  onClick={handleFollow}
+                >
+                  {isFollowing ? "Unfollow" : "Follow"}
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="space-y-3">
