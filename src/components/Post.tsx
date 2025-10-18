@@ -10,6 +10,7 @@ import CommentSection from "./CommentSection";
 import { useNavigate } from "react-router-dom";
 import { parseMentions } from "@/lib/mentionUtils";
 import { formatNumber } from "@/lib/utils";
+import { recordPostUpdate } from "@/lib/postSync";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -153,7 +154,11 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           .eq("post_id", post.id)
           .eq("user_id", currentUserId);
         setIsLiked(false);
-        setLikesCount((prev) => Math.max(0, prev - 1));
+        setLikesCount((prev) => {
+          const next = Math.max(0, prev - 1);
+          recordPostUpdate(post.id, { likes_count: next });
+          return next;
+        });
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
@@ -165,14 +170,22 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
             .eq("post_id", post.id)
             .eq("user_id", currentUserId);
           setIsBrokenHearted(false);
-          setBrokenHeartsCount((prev) => Math.max(0, prev - 1));
+          setBrokenHeartsCount((prev) => {
+            const next = Math.max(0, prev - 1);
+            recordPostUpdate(post.id, { broken_hearts_count: next });
+            return next;
+          });
         }
         await supabase.from("likes").insert({
           post_id: post.id,
           user_id: currentUserId,
         });
         setIsLiked(true);
-        setLikesCount((prev) => prev + 1);
+        setLikesCount((prev) => {
+          const next = prev + 1;
+          recordPostUpdate(post.id, { likes_count: next });
+          return next;
+        });
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       }
@@ -241,7 +254,11 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           .eq("post_id", post.id)
           .eq("user_id", currentUserId);
         setIsBrokenHearted(false);
-        setBrokenHeartsCount((prev) => Math.max(0, prev - 1));
+        setBrokenHeartsCount((prev) => {
+          const next = Math.max(0, prev - 1);
+          recordPostUpdate(post.id, { broken_hearts_count: next });
+          return next;
+        });
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
@@ -253,14 +270,22 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
             .eq("post_id", post.id)
             .eq("user_id", currentUserId);
           setIsLiked(false);
-          setLikesCount((prev) => Math.max(0, prev - 1));
+          setLikesCount((prev) => {
+            const next = Math.max(0, prev - 1);
+            recordPostUpdate(post.id, { likes_count: next });
+            return next;
+          });
         }
         await supabase.from("broken_hearts").insert({
           post_id: post.id,
           user_id: currentUserId,
         });
         setIsBrokenHearted(true);
-        setBrokenHeartsCount((prev) => prev + 1);
+        setBrokenHeartsCount((prev) => {
+          const next = prev + 1;
+          recordPostUpdate(post.id, { broken_hearts_count: next });
+          return next;
+        });
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
       }
@@ -283,7 +308,11 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           .eq("post_id", post.id)
           .eq("user_id", currentUserId);
         setIsReposted(false);
-        setRepostsCount((prev) => Math.max(0, prev - 1));
+        setRepostsCount((prev) => {
+          const next = Math.max(0, prev - 1);
+          recordPostUpdate(post.id, { reposts_count: next });
+          return next;
+        });
         toast.success("Repost removed");
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
@@ -293,7 +322,11 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           user_id: currentUserId,
         });
         setIsReposted(true);
-        setRepostsCount((prev) => prev + 1);
+        setRepostsCount((prev) => {
+          const next = prev + 1;
+          recordPostUpdate(post.id, { reposts_count: next });
+          return next;
+        });
         toast.success("Reposted!");
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
