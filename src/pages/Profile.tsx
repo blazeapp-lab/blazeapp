@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, MapPin, Link as LinkIcon, Calendar, ArrowLeft, Settings } from "lucide-react";
+import { User, MapPin, Link as LinkIcon, Calendar, ArrowLeft, Settings, Ban } from "lucide-react";
 import Post from "@/components/Post";
 import EditProfileDialog from "@/components/EditProfileDialog";
 import CreatePost from "@/components/CreatePost";
@@ -41,11 +41,13 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   const [canViewPosts, setCanViewPosts] = useState(true);
   const [followersDialogOpen, setFollowersDialogOpen] = useState(false);
   const [followersDialogTab, setFollowersDialogTab] = useState<"followers" | "following">("followers");
+  const [isBlocked, setIsBlocked] = useState(false);
 
   useEffect(() => {
     if (userId) {
       fetchProfile();
       fetchFollowData();
+      fetchBlockStatus();
     }
   }, [userId, currentUserId]);
 
@@ -173,6 +175,58 @@ const Profile = ({ currentUserId }: ProfileProps) => {
     }
   };
 
+  const fetchBlockStatus = async () => {
+    if (!currentUserId || !userId || currentUserId === userId) return;
+
+    try {
+      const { data } = await (supabase as any)
+        .from("blocks")
+        .select("id")
+        .eq("blocker_id", currentUserId)
+        .eq("blocked_id", userId)
+        .maybeSingle();
+      
+      setIsBlocked(!!data);
+    } catch (error) {
+      console.error("Failed to fetch block status:", error);
+    }
+  };
+
+  const handleBlock = async () => {
+    if (!currentUserId) {
+      toast.error("Please sign in to block users");
+      navigate("/auth");
+      return;
+    }
+
+    try {
+      if (isBlocked) {
+        const { error } = await (supabase as any)
+          .from("blocks")
+          .delete()
+          .eq("blocker_id", currentUserId)
+          .eq("blocked_id", userId);
+        
+        if (error) throw error;
+        setIsBlocked(false);
+        toast.success("User unblocked");
+      } else {
+        const { error } = await (supabase as any)
+          .from("blocks")
+          .insert({
+            blocker_id: currentUserId,
+            blocked_id: userId,
+          });
+        
+        if (error) throw error;
+        setIsBlocked(true);
+        toast.success("User blocked");
+      }
+    } catch (error: any) {
+      toast.error("Failed to update block status");
+    }
+  };
+
   const handleFollow = async () => {
     if (!currentUserId) {
       toast.error("Please sign in to follow users");
@@ -258,6 +312,14 @@ const Profile = ({ currentUserId }: ProfileProps) => {
                 onClick={handleFollow}
               >
                 {isFollowing ? "Unfollow" : "Follow"}
+              </Button>
+              <Button 
+                variant={isBlocked ? "secondary" : "outline"} 
+                size="icon"
+                onClick={handleBlock}
+                title={isBlocked ? "Unblock" : "Block"}
+              >
+                <Ban className="h-4 w-4" />
               </Button>
             </div>
           )}
