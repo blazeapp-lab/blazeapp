@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import CommentSection from "./CommentSection";
 import { useNavigate } from "react-router-dom";
+import { parseMentions } from "@/lib/mentionUtils";
 import { formatNumber } from "@/lib/utils";
 import {
   AlertDialog,
@@ -380,7 +381,9 @@ const Post = ({ post, currentUserId, onPostDeleted }: PostProps) => {
                 )}
               </div>
             </div>
-            <p className="mt-2 whitespace-pre-wrap break-words">{post.content}</p>
+            <p className="mt-2 whitespace-pre-wrap break-words">
+              {parseMentions(post.content)}
+            </p>
             {post.image_url && (
               <>
                 {post.image_url.match(/\.(mp4|webm|mov|quicktime)$/i) ? (

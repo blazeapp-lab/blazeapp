@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, User, Repeat2, Eye, ThumbsDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import CommentSection from "./CommentSection";
+import { parseMentions } from "@/lib/mentionUtils";
 
 interface FullScreenPostProps {
   open: boolean;
@@ -71,7 +72,9 @@ const FullScreenPost = ({
                   {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
                 </span>
               </div>
-              <p className="mt-3 text-lg whitespace-pre-wrap break-words">{post.content}</p>
+              <p className="mt-3 text-lg whitespace-pre-wrap break-words">
+                {parseMentions(post.content)}
+              </p>
               {post.image_url && (
                 <>
                   {post.image_url.match(/\.(mp4|webm|mov|quicktime)$/i) ? (

@@ -48,11 +48,13 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   useEffect(() => {
     const initializeProfile = async () => {
       if (userId) {
-        await Promise.all([
-          fetchProfile(),
-          fetchFollowData(),
-          fetchBlockStatus()
-        ]);
+        const profileData = await fetchProfile();
+        if (profileData) {
+          await Promise.all([
+            fetchFollowData(profileData.id),
+            fetchBlockStatus(profileData.id)
+          ]);
+        }
       }
     };
     initializeProfile();
@@ -66,17 +68,27 @@ const Profile = ({ currentUserId }: ProfileProps) => {
 
   const fetchProfile = async () => {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
+      // Check if userId is a UUID or username
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId || "");
+      
+      let query = supabase.from("profiles").select("*");
+      
+      if (isUUID) {
+        query = query.eq("id", userId);
+      } else {
+        // Treat as username (case-insensitive)
+        query = query.ilike("username", userId || "");
+      }
+      
+      const { data, error } = await query.single();
 
       if (error) throw error;
       setProfile(data);
+      return data;
     } catch (error: any) {
       toast.error("Failed to load profile");
       navigate("/");
+      return null;
     } finally {
       setLoading(false);
     }
@@ -91,7 +103,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
     }
 
     // Check if user can view posts
-    if (profile?.is_private && currentUserId !== userId && !isFollowing) {
+    if (profile?.is_private && currentUserId !== profile.id && !isFollowing) {
       setPosts([]);
       setCanViewPosts(false);
       return;
@@ -111,7 +123,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
           avatar_url
         )
       `)
-      .eq("user_id", userId)
+      .eq("user_id", profile.id)
       .order("created_at", { ascending: false });
 
     if (postsError) {
@@ -134,7 +146,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
           )
         )
       `)
-      .eq("user_id", userId);
+      .eq("user_id", profile.id);
 
     if (repostsError) {
       toast.error("Failed to load reposts");
@@ -158,39 +170,39 @@ const Profile = ({ currentUserId }: ProfileProps) => {
     setPosts(allPosts);
   };
 
-  const fetchFollowData = async () => {
-    if (!userId) return;
+  const fetchFollowData = async (profileId: string) => {
+    if (!profileId) return;
 
     // Get follower count
     const { count: followers } = await supabase
       .from("follows")
       .select("*", { count: "exact", head: true })
-      .eq("following_id", userId);
+      .eq("following_id", profileId);
 
     // Get following count
     const { count: following } = await supabase
       .from("follows")
       .select("*", { count: "exact", head: true })
-      .eq("follower_id", userId);
+      .eq("follower_id", profileId);
 
     setFollowerCount(followers || 0);
     setFollowingCount(following || 0);
 
     // Check if current user is following this profile
-    if (currentUserId && currentUserId !== userId) {
+    if (currentUserId && currentUserId !== profileId) {
       const { data } = await supabase
         .from("follows")
         .select("id")
         .eq("follower_id", currentUserId)
-        .eq("following_id", userId)
+        .eq("following_id", profileId)
         .maybeSingle();
       
       setIsFollowing(!!data);
     }
   };
 
-  const fetchBlockStatus = async () => {
-    if (!currentUserId || !userId || currentUserId === userId) {
+  const fetchBlockStatus = async (profileId: string) => {
+    if (!currentUserId || !profileId || currentUserId === profileId) {
       setBlockStatusLoading(false);
       return;
     }
@@ -201,7 +213,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
         .from("blocks")
         .select("id")
         .eq("blocker_id", currentUserId)
-        .eq("blocked_id", userId)
+        .eq("blocked_id", profileId)
         .maybeSingle();
       
       if (blockedError) {
@@ -212,7 +224,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
       // Check if current user is blocked BY this profile using a secure RPC (bypasses RLS)
       const { data: blockedByValue, error: blockedByError } = await supabase.rpc("is_blocked", {
         viewer_id: currentUserId,
-        owner_id: userId,
+        owner_id: profileId,
       });
       
       if (blockedByError) {
@@ -227,7 +239,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   };
 
   const handleBlock = async () => {
-    if (!currentUserId) {
+    if (!currentUserId || !profile) {
       toast.error("Please sign in to block users");
       navigate("/auth");
       return;
@@ -239,7 +251,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
           .from("blocks")
           .delete()
           .eq("blocker_id", currentUserId)
-          .eq("blocked_id", userId);
+          .eq("blocked_id", profile.id);
         
         if (error) {
           console.error("Error unblocking user:", error);
@@ -252,7 +264,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
           .from("blocks")
           .insert({
             blocker_id: currentUserId,
-            blocked_id: userId,
+            blocked_id: profile.id,
           });
         
         if (error) {
@@ -269,7 +281,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   };
 
   const handleFollow = async () => {
-    if (!currentUserId) {
+    if (!currentUserId || !profile) {
       toast.error("Please sign in to follow users");
       navigate("/auth");
       return;
@@ -286,7 +298,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
           .from("follows")
           .delete()
           .eq("follower_id", currentUserId)
-          .eq("following_id", userId);
+          .eq("following_id", profile.id);
         setIsFollowing(false);
         setFollowerCount((prev) => prev - 1);
       } else {
@@ -294,7 +306,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
           .from("follows")
           .insert({
             follower_id: currentUserId,
-            following_id: userId,
+            following_id: profile.id,
           });
         setIsFollowing(true);
         setFollowerCount((prev) => prev + 1);
@@ -324,7 +336,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
           <FollowersDialog
             open={followersDialogOpen}
             onOpenChange={setFollowersDialogOpen}
-            userId={userId!}
+            userId={profile.id}
             currentUserId={currentUserId}
             defaultTab={followersDialogTab}
           />
@@ -351,7 +363,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
             backgroundPosition: "center",
           }}
         >
-          {currentUserId !== userId && !isBlockedByUser && !isBlocked && (
+          {currentUserId !== profile.id && !isBlockedByUser && !isBlocked && (
             <div className="absolute top-4 right-4 flex gap-2">
               <Button 
                 variant={isFollowing ? "secondary" : "default"} 
@@ -369,7 +381,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
               </Button>
             </div>
           )}
-          {currentUserId === userId && (
+          {currentUserId === profile.id && (
             <Button
               variant="secondary"
               size="icon"
@@ -453,7 +465,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
 
       <div className="mt-6 space-y-4">
         <h2 className="text-xl font-bold">Posts</h2>
-        {currentUserId === userId && (
+        {currentUserId === profile.id && (
           <CreatePost userId={currentUserId} onPostCreated={fetchUserPosts} />
         )}
         {(isBlockedByUser || isBlocked) ? (

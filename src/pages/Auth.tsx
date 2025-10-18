@@ -72,6 +72,8 @@ const Auth = () => {
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
+      } else if (error.message?.includes("profiles_username_unique")) {
+        toast.error("Username already taken. Please choose another one.");
       } else {
         toast.error(error.message || "An error occurred");
       }

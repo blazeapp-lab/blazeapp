@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import CommentSection from "@/components/CommentSection";
 import { toast } from "sonner";
 import { formatNumber } from "@/lib/utils";
+import { parseMentions } from "@/lib/mentionUtils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -388,7 +389,9 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
                 <span className="italic ml-1">(edited)</span>
               )}
             </span>
-            <p className="mt-3 text-lg whitespace-pre-wrap break-words">{post.content}</p>
+            <p className="mt-3 text-lg whitespace-pre-wrap break-words">
+              {parseMentions(post.content)}
+            </p>
             {post.image_url && (
               <>
                 {post.image_url.match(/\.(mp4|webm|mov|quicktime)$/i) ? (
