@@ -96,7 +96,28 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
     }
   }, [post.id, post.likes_count, post.broken_hearts_count, post.reposts_count, post.views_count, currentUserId]);
 
-  // Removed real-time counter updates to prevent race conditions with optimistic updates
+  // Listen for counter updates from PostDetail or other Post components
+  useEffect(() => {
+    const handlePostUpdate = (e: CustomEvent<any>) => {
+      if (e.detail.postId === post.id) {
+        if (e.detail.likes_count !== undefined) {
+          setLikesCount(e.detail.likes_count);
+        }
+        if (e.detail.broken_hearts_count !== undefined) {
+          setBrokenHeartsCount(e.detail.broken_hearts_count);
+        }
+        if (e.detail.reposts_count !== undefined) {
+          setRepostsCount(e.detail.reposts_count);
+        }
+        if (e.detail.comments_count !== undefined) {
+          setCommentsCount(e.detail.comments_count);
+        }
+      }
+    };
+    
+    window.addEventListener('blaze:update-post', handlePostUpdate as EventListener);
+    return () => window.removeEventListener('blaze:update-post', handlePostUpdate as EventListener);
+  }, [post.id]);
 
   const trackView = async () => {
     try {
