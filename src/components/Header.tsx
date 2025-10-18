@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import blazeLogo from "@/assets/blaze-logo-new.png";
 
 interface HeaderProps {
-  userId: string | undefined;
+  userId?: string;
 }
 
 const Header = ({ userId }: HeaderProps) => {
@@ -59,13 +59,6 @@ const Header = ({ userId }: HeaderProps) => {
     navigate("/auth");
   };
 
-  const navItems = [
-    { icon: Home, label: "Home", path: "/" },
-    { icon: SearchIcon, label: "Search", path: "/search" },
-    { icon: Bell, label: "Notifications", path: "/notifications", badge: unreadCount },
-    { icon: User, label: "Profile", path: `/profile/${userId}` },
-  ];
-
   return (
     <header className="w-full border-b border-border bg-card sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-4">
@@ -77,50 +70,87 @@ const Header = ({ userId }: HeaderProps) => {
             <img src={blazeLogo} alt="Blaze" className="h-10 w-10" />
           </button>
           
-          <nav className="flex items-center gap-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              return (
-                <Button
-                  key={item.path}
-                  variant={isActive ? "secondary" : "ghost"}
-                  size="sm"
-                  onClick={() => navigate(item.path)}
-                  className="relative"
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.badge && item.badge > 0 && (
-                    <Badge 
-                      variant="destructive" 
-                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                    >
-                      {item.badge > 9 ? "9+" : item.badge}
-                    </Badge>
-                  )}
-                </Button>
-              );
-            })}
-            
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => {
-                const createPostBtn = document.getElementById("create-post-trigger");
-                createPostBtn?.click();
-              }}
-            >
-              <PenSquare className="h-4 w-4" />
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </nav>
+          {userId ? (
+            <nav className="flex items-center gap-1">
+              <Button
+                variant={location.pathname === "/" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => navigate("/")}
+              >
+                <Home className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                variant={location.pathname === "/search" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => navigate("/search")}
+              >
+                <SearchIcon className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                variant={location.pathname === "/notifications" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => navigate("/notifications")}
+                className="relative"
+              >
+                <Bell className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                  >
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </Badge>
+                )}
+              </Button>
+              
+              <Button
+                variant={location.pathname === `/profile/${userId}` ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => navigate(`/profile/${userId}`)}
+              >
+                <User className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  const createPostBtn = document.getElementById("create-post-trigger");
+                  createPostBtn?.click();
+                }}
+              >
+                <PenSquare className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </nav>
+          ) : (
+            <nav className="flex items-center gap-1">
+              <Button
+                variant={location.pathname === "/search" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => navigate("/search")}
+              >
+                <SearchIcon className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => navigate("/auth")}
+              >
+                Sign in to post
+              </Button>
+            </nav>
+          )}
         </div>
       </div>
     </header>
