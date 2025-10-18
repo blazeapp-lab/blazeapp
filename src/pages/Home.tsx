@@ -19,7 +19,72 @@ const Home = ({ currentUserId }: HomeProps) => {
 
   const fetchPosts = async () => {
     try {
-      let query = supabase
+      if (!currentUserId) {
+        // Not logged in - just show trending posts from this week
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        
+        const { data, error } = await supabase
+          .from("posts")
+          .select(`
+            *,
+            profiles!inner (
+              id,
+              username,
+              display_name,
+              avatar_url,
+              is_private
+            )
+          `)
+          .gte("created_at", oneWeekAgo.toISOString())
+          .eq("profiles.is_private", false)
+          .order("likes_count", { ascending: false })
+          .limit(50);
+
+        if (error) throw error;
+        setPosts(data || []);
+        return;
+      }
+
+      // Get list of users the current user is following
+      const { data: followingData } = await supabase
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", currentUserId);
+      
+      const followingIds = followingData?.map(f => f.following_id) || [];
+
+      // Fetch recent posts from followed users (last 3 days)
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      
+      let followedPosts: any[] = [];
+      if (followingIds.length > 0) {
+        const { data } = await supabase
+          .from("posts")
+          .select(`
+            *,
+            profiles!inner (
+              id,
+              username,
+              display_name,
+              avatar_url,
+              is_private
+            )
+          `)
+          .in("user_id", followingIds)
+          .gte("created_at", threeDaysAgo.toISOString())
+          .order("created_at", { ascending: false })
+          .limit(25);
+        
+        followedPosts = data || [];
+      }
+
+      // Fetch trending posts from this week (high engagement)
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      
+      const { data: trendingData } = await supabase
         .from("posts")
         .select(`
           *,
@@ -31,35 +96,46 @@ const Home = ({ currentUserId }: HomeProps) => {
             is_private
           )
         `)
-        .order("created_at", { ascending: false });
+        .gte("created_at", oneWeekAgo.toISOString())
+        .order("likes_count", { ascending: false })
+        .limit(30);
 
-      const { data, error } = await query;
+      let trendingPosts = trendingData || [];
+      
+      // Filter trending posts for privacy
+      trendingPosts = trendingPosts.filter(post => 
+        !post.profiles.is_private || 
+        post.user_id === currentUserId ||
+        followingIds.includes(post.user_id)
+      );
 
-      if (error) throw error;
+      // Combine and remove duplicates (prefer followed posts)
+      const postMap = new Map();
+      followedPosts.forEach(post => postMap.set(post.id, post));
+      trendingPosts.forEach(post => {
+        if (!postMap.has(post.id)) {
+          postMap.set(post.id, post);
+        }
+      });
+
+      // Convert to array and mix followed/trending
+      const combinedPosts = Array.from(postMap.values());
       
-      // Filter out posts from private accounts unless user is following them
-      let filteredPosts = data || [];
-      if (currentUserId) {
-        // Get list of users the current user is following
-        const { data: followingData } = await supabase
-          .from("follows")
-          .select("following_id")
-          .eq("follower_id", currentUserId);
+      // Sort by a mix of recency and engagement
+      combinedPosts.sort((a, b) => {
+        const aScore = a.likes_count * 2 + a.comments_count * 3 + a.reposts_count * 2;
+        const bScore = b.likes_count * 2 + b.comments_count * 3 + b.reposts_count * 2;
+        const aTime = new Date(a.created_at).getTime();
+        const bTime = new Date(b.created_at).getTime();
         
-        const followingIds = followingData?.map(f => f.following_id) || [];
+        // Weighted score: 70% engagement, 30% recency
+        const aFinal = (aScore * 0.7) + ((aTime / 1000000) * 0.3);
+        const bFinal = (bScore * 0.7) + ((bTime / 1000000) * 0.3);
         
-        // Filter out private posts unless following or own posts
-        filteredPosts = filteredPosts.filter(post => 
-          !post.profiles.is_private || 
-          post.user_id === currentUserId ||
-          followingIds.includes(post.user_id)
-        );
-      } else {
-        // Not logged in - filter out all private accounts
-        filteredPosts = filteredPosts.filter(post => !post.profiles.is_private);
-      }
+        return bFinal - aFinal;
+      });
       
-      setPosts(filteredPosts);
+      setPosts(combinedPosts);
     } catch (error: any) {
       toast.error("Failed to load posts");
     } finally {
