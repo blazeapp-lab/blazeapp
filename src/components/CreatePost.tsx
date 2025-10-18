@@ -56,9 +56,9 @@ const CreatePost = ({ userId, onPostCreated }: CreatePostProps) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (50MB limit)
-    if (file.size > 52428800) {
-      toast.error("File must be less than 50MB");
+    // Check file size (500MB limit)
+    if (file.size > 524288000) {
+      toast.error("File must be less than 500MB");
       return;
     }
 

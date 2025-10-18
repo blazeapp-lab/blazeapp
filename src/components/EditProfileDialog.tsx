@@ -70,8 +70,8 @@ const EditProfileDialog = ({ open, onOpenChange, profile, onProfileUpdated }: Ed
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5242880) {
-        toast.error("Avatar image must be less than 5MB");
+      if (file.size > 524288000) {
+        toast.error("Avatar image must be less than 500MB");
         return;
       }
       const isValid = await validateImageFile(file);
@@ -87,8 +87,8 @@ const EditProfileDialog = ({ open, onOpenChange, profile, onProfileUpdated }: Ed
   const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5242880) {
-        toast.error("Banner image must be less than 5MB");
+      if (file.size > 524288000) {
+        toast.error("Banner image must be less than 500MB");
         return;
       }
       const isValid = await validateImageFile(file);
