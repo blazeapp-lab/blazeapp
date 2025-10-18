@@ -161,6 +161,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           .eq("user_id", currentUserId);
         setIsLiked(false);
         setLikesCount((prev) => Math.max(0, prev - 1));
+        window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
         if (isBrokenHearted) {
           await supabase
@@ -177,6 +178,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
         });
         setIsLiked(true);
         setLikesCount((prev) => prev + 1);
+        window.dispatchEvent(new Event("blaze:refresh-feed"));
       }
     } catch (error: any) {
       toast.error("Failed to update like");
@@ -198,6 +200,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           .eq("user_id", currentUserId);
         setIsBrokenHearted(false);
         setBrokenHeartsCount((prev) => Math.max(0, prev - 1));
+        window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
         if (isLiked) {
           await supabase
@@ -214,6 +217,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
         });
         setIsBrokenHearted(true);
         setBrokenHeartsCount((prev) => prev + 1);
+        window.dispatchEvent(new Event("blaze:refresh-feed"));
       }
     } catch (error: any) {
       toast.error("Failed to update reaction");
@@ -236,6 +240,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
         setIsReposted(false);
         setRepostsCount((prev) => Math.max(0, prev - 1));
         toast.success("Repost removed");
+        window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
         await supabase.from("reposts").insert({
           post_id: postId,
@@ -244,6 +249,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
         setIsReposted(true);
         setRepostsCount((prev) => prev + 1);
         toast.success("Reposted!");
+        window.dispatchEvent(new Event("blaze:refresh-feed"));
       }
     } catch (error: any) {
       toast.error("Failed to repost");
@@ -266,6 +272,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
       if (error) throw error;
 
       toast.success("Post deleted successfully");
+      window.dispatchEvent(new Event("blaze:refresh-feed"));
       navigate("/");
     } catch (error: any) {
       toast.error("Failed to delete post");
@@ -278,7 +285,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
       return;
     }
 
-    setIsEditing(true);
+  setIsEditing(true);
     try {
       const { error } = await supabase
         .from("posts")
@@ -290,6 +297,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
       toast.success("Post updated successfully");
       setShowEditDialog(false);
       fetchPost();
+      window.dispatchEvent(new Event("blaze:refresh-feed"));
     } catch (error: any) {
       toast.error("Failed to update post");
     } finally {

@@ -17,6 +17,16 @@ const Home = ({ currentUserId }: HomeProps) => {
     fetchPosts();
   }, [currentUserId]);
 
+  // Refresh feed when PostDetail updates interactions
+  useEffect(() => {
+    const onRefresh = (_e: Event) => {
+      fetchPosts();
+    };
+    window.addEventListener("blaze:refresh-feed", onRefresh);
+    return () => {
+      window.removeEventListener("blaze:refresh-feed", onRefresh);
+    };
+  }, [currentUserId]);
   const fetchPosts = async () => {
     try {
       if (!currentUserId) {

@@ -154,6 +154,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           .eq("user_id", currentUserId);
         setIsLiked(false);
         setLikesCount((prev) => Math.max(0, prev - 1));
+        window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
         // If user has disliked, remove the dislike first
         if (isBrokenHearted) {
@@ -171,6 +172,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         });
         setIsLiked(true);
         setLikesCount((prev) => prev + 1);
+        window.dispatchEvent(new Event("blaze:refresh-feed"));
       }
     } catch (error: any) {
       toast.error("Failed to update like");
@@ -187,6 +189,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
       if (error) throw error;
 
       toast.success("Post deleted successfully");
+      window.dispatchEvent(new Event("blaze:refresh-feed"));
       setShowDeleteDialog(false);
       onPostDeleted?.();
     } catch (error: any) {
@@ -212,6 +215,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
       toast.success("Post updated successfully");
       setShowEditDialog(false);
       onPostDeleted?.(); // Refresh the posts
+      window.dispatchEvent(new Event("blaze:refresh-feed"));
     } catch (error: any) {
       toast.error("Failed to update post");
     } finally {
@@ -234,6 +238,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           .eq("user_id", currentUserId);
         setIsBrokenHearted(false);
         setBrokenHeartsCount((prev) => Math.max(0, prev - 1));
+        window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
         // If user has liked, remove the like first
         if (isLiked) {
@@ -251,6 +256,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         });
         setIsBrokenHearted(true);
         setBrokenHeartsCount((prev) => prev + 1);
+        window.dispatchEvent(new Event("blaze:refresh-feed"));
       }
     } catch (error: any) {
       toast.error("Failed to update reaction");
@@ -273,6 +279,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         setIsReposted(false);
         setRepostsCount((prev) => Math.max(0, prev - 1));
         toast.success("Repost removed");
+        window.dispatchEvent(new Event("blaze:refresh-feed"));
       } else {
         await supabase.from("reposts").insert({
           post_id: post.id,
@@ -281,6 +288,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         setIsReposted(true);
         setRepostsCount((prev) => prev + 1);
         toast.success("Reposted!");
+        window.dispatchEvent(new Event("blaze:refresh-feed"));
       }
     } catch (error: any) {
       toast.error("Failed to repost");
