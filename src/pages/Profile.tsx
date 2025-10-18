@@ -7,6 +7,7 @@ import { User, MapPin, Link as LinkIcon, Calendar, ArrowLeft, Settings } from "l
 import Post from "@/components/Post";
 import EditProfileDialog from "@/components/EditProfileDialog";
 import CreatePost from "@/components/CreatePost";
+import FollowersDialog from "@/components/FollowersDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -38,6 +39,8 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [canViewPosts, setCanViewPosts] = useState(true);
+  const [followersDialogOpen, setFollowersDialogOpen] = useState(false);
+  const [followersDialogTab, setFollowersDialogTab] = useState<"followers" | "following">("followers");
 
   useEffect(() => {
     if (userId) {
@@ -208,15 +211,24 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   return (
     <>
       {profile && (
-        <EditProfileDialog
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          profile={profile}
-          onProfileUpdated={() => {
-            fetchProfile();
-            fetchUserPosts();
-          }}
-        />
+        <>
+          <EditProfileDialog
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            profile={profile}
+            onProfileUpdated={() => {
+              fetchProfile();
+              fetchUserPosts();
+            }}
+          />
+          <FollowersDialog
+            open={followersDialogOpen}
+            onOpenChange={setFollowersDialogOpen}
+            userId={userId!}
+            currentUserId={currentUserId}
+            defaultTab={followersDialogTab}
+          />
+        </>
       )}
       
       <div className="max-w-2xl mx-auto">
@@ -284,14 +296,26 @@ const Profile = ({ currentUserId }: ProfileProps) => {
             {profile.bio && <p className="text-sm">{profile.bio}</p>}
 
             <div className="flex gap-4 text-sm">
-              <div className="flex items-center gap-1">
+              <button
+                onClick={() => {
+                  setFollowersDialogTab("followers");
+                  setFollowersDialogOpen(true);
+                }}
+                className="flex items-center gap-1 hover:underline"
+              >
                 <span className="font-semibold text-foreground">{followerCount}</span>
                 <span className="text-muted-foreground">Followers</span>
-              </div>
-              <div className="flex items-center gap-1">
+              </button>
+              <button
+                onClick={() => {
+                  setFollowersDialogTab("following");
+                  setFollowersDialogOpen(true);
+                }}
+                className="flex items-center gap-1 hover:underline"
+              >
                 <span className="font-semibold text-foreground">{followingCount}</span>
                 <span className="text-muted-foreground">Following</span>
-              </div>
+              </button>
             </div>
 
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
