@@ -92,33 +92,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
     }
   }, [post.id, post.likes_count, post.broken_hearts_count, post.reposts_count, post.views_count, currentUserId]);
 
-  // Real-time updates for post interactions
-  useEffect(() => {
-    const channel = supabase
-      .channel(`post-${post.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'posts',
-          filter: `id=eq.${post.id}`
-        },
-        (payload) => {
-          const newPost = payload.new as any;
-          setLikesCount(newPost.likes_count);
-          setBrokenHeartsCount(newPost.broken_hearts_count);
-          setRepostsCount(newPost.reposts_count);
-          setViewsCount(newPost.views_count);
-          setCommentsCount(newPost.comments_count);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [post.id]);
+  // Removed real-time counter updates to prevent race conditions with optimistic updates
 
   const trackView = async () => {
     try {

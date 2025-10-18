@@ -55,34 +55,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
     }
   }, [postId, currentUserId]);
 
-  // Real-time updates for post interactions
-  useEffect(() => {
-    if (!postId) return;
-
-    const channel = supabase
-      .channel(`post-detail-${postId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'posts',
-          filter: `id=eq.${postId}`
-        },
-        (payload) => {
-          const newPost = payload.new as any;
-          setLikesCount(newPost.likes_count);
-          setBrokenHeartsCount(newPost.broken_hearts_count);
-          setRepostsCount(newPost.reposts_count);
-          setCommentsCount(newPost.comments_count);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [postId]);
+  // Removed real-time counter updates to prevent race conditions with optimistic updates
 
   const fetchPost = async () => {
     try {
