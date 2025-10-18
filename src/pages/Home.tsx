@@ -153,14 +153,7 @@ const Home = ({ currentUserId }: HomeProps) => {
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Home</h1>
-        {!currentUserId && (
-          <Button onClick={() => window.location.href = '/auth'}>
-            Sign in to post
-          </Button>
-        )}
-      </div>
+      <h1 className="text-2xl font-bold">Home</h1>
       
       {currentUserId && <CreatePost userId={currentUserId} onPostCreated={fetchPosts} />}
       
