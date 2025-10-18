@@ -55,7 +55,7 @@ const Notifications = () => {
           display_name,
           avatar_url
         ),
-        post:posts (
+        post:posts!notifications_post_id_fkey (
           content,
           image_url
         )
@@ -153,7 +153,7 @@ const Notifications = () => {
       case "tag":
         return "tagged you in a post";
       case "new_post":
-        return "posted something new";
+        return "posted";
       default:
         return "interacted with your content";
     }
@@ -220,9 +220,9 @@ const Notifications = () => {
                       </p>
                     </div>
                     {notification.type === "new_post" && notification.post && (
-                      <div className="mt-2 p-2 bg-muted/50 rounded text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                         {notification.post.content}
-                      </div>
+                      </p>
                     )}
                     <p className="text-xs text-muted-foreground mt-1">
                       {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
