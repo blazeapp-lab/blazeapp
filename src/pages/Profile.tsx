@@ -121,7 +121,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
         .from("posts")
         .select(`
           *,
-          profiles (
+          profiles!posts_user_id_fkey (
             id,
             username,
             display_name,
@@ -141,7 +141,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
       .from("posts")
       .select(`
         *,
-        profiles (
+        profiles!posts_user_id_fkey (
           id,
           username,
           display_name,
@@ -163,7 +163,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
         created_at,
         posts (
           *,
-          profiles (
+          profiles!posts_user_id_fkey (
             id,
             username,
             display_name,

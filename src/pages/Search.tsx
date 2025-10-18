@@ -48,7 +48,7 @@ const Search = ({ currentUserId }: SearchProps) => {
         .from("posts")
         .select(`
           *,
-          profiles!inner (
+          profiles!posts_user_id_fkey!inner (
             id,
             username,
             display_name,
@@ -105,7 +105,7 @@ const Search = ({ currentUserId }: SearchProps) => {
           .from("posts")
           .select(`
             *,
-            profiles!inner (
+            profiles!posts_user_id_fkey!inner (
               id,
               username,
               display_name,

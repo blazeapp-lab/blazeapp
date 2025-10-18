@@ -28,7 +28,7 @@ const Home = ({ currentUserId }: HomeProps) => {
           .from("posts")
           .select(`
             *,
-            profiles!inner (
+            profiles!posts_user_id_fkey!inner (
               id,
               username,
               display_name,
@@ -65,7 +65,7 @@ const Home = ({ currentUserId }: HomeProps) => {
           .from("posts")
           .select(`
             *,
-            profiles!inner (
+            profiles!posts_user_id_fkey!inner (
               id,
               username,
               display_name,
@@ -89,7 +89,7 @@ const Home = ({ currentUserId }: HomeProps) => {
         .from("posts")
         .select(`
           *,
-          profiles!inner (
+          profiles!posts_user_id_fkey!inner (
             id,
             username,
             display_name,

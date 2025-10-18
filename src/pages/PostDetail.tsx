@@ -62,7 +62,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
         .from("posts")
         .select(`
           *,
-          profiles (
+          profiles!posts_user_id_fkey (
             id,
             username,
             display_name,
