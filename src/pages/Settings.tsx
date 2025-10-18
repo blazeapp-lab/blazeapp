@@ -189,6 +189,14 @@ const Settings = () => {
   };
 
   const handleUpdateUsername = async () => {
+    // Validate username format
+    const usernameRegex = /^[a-zA-Z0-9_.]{1,16}$/;
+    
+    if (!usernameRegex.test(username)) {
+      toast.error("Username must be 1-16 characters and contain only letters, numbers, underscores, and periods");
+      return;
+    }
+
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -199,7 +207,11 @@ const Settings = () => {
         .eq("id", user.id);
       
       if (error) {
-        toast.error(error.message);
+        if (error.code === '23505') {
+          toast.error("This username is already taken. Please choose another one.");
+        } else {
+          toast.error(error.message);
+        }
       } else {
         toast.success("Username updated successfully");
       }
@@ -449,7 +461,11 @@ const Settings = () => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                maxLength={16}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Max 16 characters. Letters, numbers, underscores, and periods only.
+              </p>
             </div>
             <Button onClick={handleUpdateUsername} disabled={loading}>
               Update Username

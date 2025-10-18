@@ -15,7 +15,7 @@ const loginSchema = z.object({
 });
 
 const signupSchema = loginSchema.extend({
-  username: z.string().trim().min(3, { message: "Username must be at least 3 characters" }).max(30, { message: "Username too long" }).regex(/^[a-zA-Z0-9_]+$/, { message: "Username can only contain letters, numbers, and underscores" }),
+  username: z.string().trim().min(1, { message: "Username is required" }).max(16, { message: "Username must be 16 characters or less" }).regex(/^[a-zA-Z0-9_.]+$/, { message: "Username can only contain letters, numbers, underscores, and periods" }),
   displayName: z.string().trim().min(1, { message: "Display name is required" }).max(50, { message: "Display name too long" }),
 });
 
@@ -106,8 +106,12 @@ const Auth = () => {
                     placeholder="johndoe"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    maxLength={16}
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Max 16 characters. Letters, numbers, underscores, and periods only.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="displayName">Display Name</Label>
