@@ -68,21 +68,37 @@ const Auth = () => {
 
     try {
       if (isLogin) {
+        let userId: string | undefined;
         if (authMethod === "email") {
           const validatedData = emailLoginSchema.parse({ email, password });
-          const { error } = await supabase.auth.signInWithPassword({
+          const { data, error } = await supabase.auth.signInWithPassword({
             email: validatedData.email,
             password: validatedData.password,
           });
           if (error) throw error;
+          userId = data.user?.id;
         } else {
           const validatedData = phoneLoginSchema.parse({ phone, password });
-          const { error } = await supabase.auth.signInWithPassword({
+          const { data, error } = await supabase.auth.signInWithPassword({
             phone: validatedData.phone,
             password: validatedData.password,
           });
           if (error) throw error;
+          userId = data.user?.id;
         }
+
+        // Check if user is suspended
+        if (userId) {
+          const { data: isSuspended } = await supabase.rpc('is_user_suspended', {
+            _user_id: userId
+          });
+
+          if (isSuspended) {
+            await supabase.auth.signOut();
+            throw new Error('Your account has been suspended. Please contact support.');
+          }
+        }
+
         toast.success("Welcome back!");
         navigate("/");
       } else {
