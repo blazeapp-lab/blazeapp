@@ -13,6 +13,10 @@ import Notifications from "./pages/Notifications";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
+import AdminUsers from "./pages/AdminUsers";
+import AdminReports from "./pages/AdminReports";
+import AdminSettings from "./pages/AdminSettings";
 import Header from "@/components/Header";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
@@ -37,6 +41,10 @@ const App = () => {
                     <Route path="/profile/:userId" element={<ProfileWrapper />} />
                     <Route path="/post/:postId" element={<PostDetailWrapper />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/admin" element={<Admin />} />
+                    <Route path="/admin/users" element={<AdminUsers />} />
+                    <Route path="/admin/reports" element={<AdminReports />} />
+                    <Route path="/admin/settings" element={<AdminSettings />} />
                     <Route path="/terms" element={<TermsOfService />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="*" element={<NotFound />} />
