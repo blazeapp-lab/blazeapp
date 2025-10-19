@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
+import AdminNav from '@/components/AdminNav';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ArrowLeft, Eye, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { Eye, Trash2, CheckCircle, XCircle } from 'lucide-react';
 
 interface Report {
   id: string;
@@ -113,14 +114,10 @@ const AdminReports = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <AdminNav />
       <main className="container mx-auto px-4 pt-8 pb-8">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-4 mb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-3xl font-bold">Content Reports</h1>
-          </div>
+          <h1 className="text-3xl font-bold mb-6">Content Reports</h1>
 
           {loading ? (
             <div className="text-center py-8">Loading reports...</div>

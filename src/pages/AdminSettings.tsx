@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
+import AdminNav from '@/components/AdminNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { ArrowLeft, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 
 const AdminSettings = () => {
   const navigate = useNavigate();
@@ -84,14 +85,10 @@ const AdminSettings = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <AdminNav />
       <main className="container mx-auto px-4 pt-8 pb-8">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-4 mb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-3xl font-bold">App Settings</h1>
-          </div>
+          <h1 className="text-3xl font-bold mb-6">App Settings</h1>
 
           <div className="space-y-6">
             <Card>

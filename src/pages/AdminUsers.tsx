@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
+import AdminNav from '@/components/AdminNav';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -10,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { ArrowLeft, Search, Ban, Trash2, UserCheck } from 'lucide-react';
+import { Search, Ban, Trash2, UserCheck } from 'lucide-react';
 
 interface UserWithProfile {
   id: string;
@@ -38,6 +39,7 @@ const AdminUsers = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [suspendReason, setSuspendReason] = useState('');
   const [suspendDuration, setSuspendDuration] = useState('permanent');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
 
   useEffect(() => {
     if (!adminLoading && !isAdmin) {
@@ -50,13 +52,21 @@ const AdminUsers = () => {
   }, []);
 
   useEffect(() => {
-    const filtered = users.filter(user => 
+    let filtered = users.filter(user => 
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.profiles?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.profiles?.display_name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
+    
+    // Sort by date
+    filtered = filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return sortBy === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+    
     setFilteredUsers(filtered);
-  }, [searchQuery, users]);
+  }, [searchQuery, users, sortBy]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -166,13 +176,28 @@ const AdminUsers = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <AdminNav />
       <main className="container mx-auto px-4 pt-8 pb-8">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-4 mb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
+          <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold">User Management</h1>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Sort by:</span>
+              <Button
+                variant={sortBy === 'newest' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortBy('newest')}
+              >
+                Newest First
+              </Button>
+              <Button
+                variant={sortBy === 'oldest' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortBy('oldest')}
+              >
+                Oldest First
+              </Button>
+            </div>
           </div>
 
           <div className="flex gap-4 mb-6">

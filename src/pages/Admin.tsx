@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAdmin } from '@/hooks/useAdmin';
-import Header from '@/components/Header';
+import AdminNav from '@/components/AdminNav';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Flag, Settings as SettingsIcon, Shield } from 'lucide-react';
+import { Users, Flag, Settings as SettingsIcon } from 'lucide-react';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -29,13 +29,10 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container mx-auto px-4 pt-20 pb-8">
+      <AdminNav />
+      <main className="container mx-auto px-4 pt-8 pb-8">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-3 mb-8">
-            <Shield className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          </div>
+          <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Link to="/admin/users">
