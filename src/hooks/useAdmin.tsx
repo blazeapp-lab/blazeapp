@@ -17,12 +17,16 @@ export const useAdmin = () => {
         return;
       }
 
-      const { data: roles } = await supabase
+      const { data: roles, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id);
 
-      if (roles) {
+      if (error) {
+        console.error('Error fetching roles:', error);
+      }
+
+      if (roles && roles.length > 0) {
         setIsAdmin(roles.some(r => r.role === 'admin'));
         setIsModerator(roles.some(r => r.role === 'moderator'));
       }
