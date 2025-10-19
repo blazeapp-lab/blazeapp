@@ -493,6 +493,36 @@ export type Database = {
           },
         ]
       }
+      rate_limit_logs: {
+        Row: {
+          created_at: string | null
+          endpoint: string
+          id: string
+          ip_address: string
+          is_blocked: boolean | null
+          request_count: number | null
+          window_start: string
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          ip_address: string
+          is_blocked?: boolean | null
+          request_count?: number | null
+          window_start?: string
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          ip_address?: string
+          is_blocked?: boolean | null
+          request_count?: number | null
+          window_start?: string
+        }
+        Relationships: []
+      }
       reposts: {
         Row: {
           created_at: string

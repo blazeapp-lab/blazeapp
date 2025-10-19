@@ -51,6 +51,9 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
+  // Honeypot fields - hidden from users but visible to bots
+  const [website, setWebsite] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState("");
 
   useEffect(() => {
     const checkUser = async () => {
@@ -64,9 +67,25 @@ const Auth = () => {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Honeypot check - if filled, it's a bot
+    if (website || confirmEmail) {
+      console.log('Bot detected via honeypot');
+      toast.error("Please try again");
+      return;
+    }
+    
     setLoading(true);
 
     try {
+      // Check rate limit before auth
+      const { data: rateLimitCheck, error: rateLimitError } = await supabase.functions.invoke('check-rate-limit', {
+        body: { endpoint: isLogin ? 'login' : 'signup' }
+      });
+
+      if (rateLimitError || !rateLimitCheck?.allowed) {
+        throw new Error(rateLimitCheck?.reason || 'Too many requests. Please try again later.');
+      }
       if (isLogin) {
         let userId: string | undefined;
         if (authMethod === "email") {
@@ -181,6 +200,26 @@ const Auth = () => {
           </Tabs>
 
           <form onSubmit={handleAuth} className="space-y-4">
+            {/* Honeypot fields - hidden from users */}
+            <div style={{ position: 'absolute', left: '-9999px' }} aria-hidden="true">
+              <Input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+              />
+              <Input
+                type="email"
+                name="confirm_email"
+                tabIndex={-1}
+                autoComplete="off"
+                value={confirmEmail}
+                onChange={(e) => setConfirmEmail(e.target.value)}
+              />
+            </div>
+
             {!isLogin && (
               <>
                 <div className="space-y-2">
