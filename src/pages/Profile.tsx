@@ -3,11 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, MapPin, Link as LinkIcon, Calendar, ArrowLeft, Settings, Ban, Pin } from "lucide-react";
+import { User, MapPin, Link as LinkIcon, Calendar, ArrowLeft, Settings, Ban, Pin, Flag } from "lucide-react";
 import Post from "@/components/Post";
 import EditProfileDialog from "@/components/EditProfileDialog";
 import CreatePost from "@/components/CreatePost";
 import FollowersDialog from "@/components/FollowersDialog";
+import { ReportDialog } from "@/components/ReportDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -46,6 +47,7 @@ const Profile = ({ currentUserId }: ProfileProps) => {
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlockedByUser, setIsBlockedByUser] = useState(false);
   const [blockStatusLoading, setBlockStatusLoading] = useState(true);
+  const [showReportDialog, setShowReportDialog] = useState(false);
 
   useEffect(() => {
     const initializeProfile = async () => {
@@ -430,6 +432,14 @@ const Profile = ({ currentUserId }: ProfileProps) => {
               >
                 <Ban className="h-4 w-4" />
               </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setShowReportDialog(true)}
+                title="Report user"
+              >
+                <Flag className="h-4 w-4" />
+              </Button>
             </div>
           )}
           {currentUserId === profile.id && (
@@ -566,6 +576,13 @@ const Profile = ({ currentUserId }: ProfileProps) => {
           </>
         )}
       </div>
+
+      <ReportDialog
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+        contentType="profile"
+        contentId={profile.id}
+      />
     </div>
     </>
   );

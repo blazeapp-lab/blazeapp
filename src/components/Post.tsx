@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, User, Trash2, Edit, ThumbsDown, Repeat2, Share2, Pin } from "lucide-react";
+import { Heart, MessageCircle, User, Trash2, Edit, ThumbsDown, Repeat2, Share2, Pin, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { parseMentions } from "@/lib/mentionUtils";
 import { formatNumber } from "@/lib/utils";
 import { emitPostUpdate } from "@/lib/postEvents";
+import { ReportDialog } from "./ReportDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,6 +76,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
   const [isLiking, setIsLiking] = useState(false);
   const [isBrokenHearting, setIsBrokenHearting] = useState(false);
   const [isReposting, setIsReposting] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
 
   useEffect(() => {
     // Sync counters with prop values
@@ -490,7 +492,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
               <Button variant="ghost" size="sm" onClick={handleShare}>
                 <Share2 className="h-4 w-4" />
               </Button>
-              {currentUserId === post.user_id && (
+              {currentUserId === post.user_id ? (
                 <>
                   {showPinButton && (
                     <Button variant="ghost" size="sm" onClick={onPin} title={isPinned ? "Unpin post" : "Pin post"}>
@@ -511,6 +513,18 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </>
+              ) : currentUserId && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowReportDialog(true);
+                  }}
+                  title="Report post"
+                >
+                  <Flag className="h-4 w-4" />
+                </Button>
               )}
             </div>
             <p className="mt-2 whitespace-pre-wrap break-words">{parseMentions(post.content)}</p>
@@ -616,6 +630,13 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
           </div>
         </DialogContent>
       </Dialog>
+
+      <ReportDialog
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+        contentType="post"
+        contentId={post.id}
+      />
     </>
   );
 };

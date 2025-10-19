@@ -5,9 +5,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { Loader2, User, Heart, Trash2, Edit } from "lucide-react";
+import { Loader2, User, Heart, Trash2, Edit, Flag } from "lucide-react";
 import { z } from "zod";
 import { emitPostUpdate } from "@/lib/postEvents";
+import { ReportDialog } from "./ReportDialog";
 
 const commentSchema = z.object({
   content: z.string()
@@ -47,6 +48,7 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
   const [editingComment, setEditingComment] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [reportingComment, setReportingComment] = useState<string | null>(null);
 
   useEffect(() => {
     fetchComments();
@@ -327,6 +329,17 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
                       </Button>
                     </>
                   )}
+                  {comment.user_id !== currentUserId && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => setReportingComment(comment.id)}
+                      title="Report comment"
+                    >
+                      <Flag className="h-3 w-3" />
+                    </Button>
+                  )}
                 </div>
               </>
             )}
@@ -378,6 +391,13 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
           <CommentItem key={comment.id} comment={comment} />
         ))}
       </div>
+
+      <ReportDialog
+        open={reportingComment !== null}
+        onOpenChange={(open) => !open && setReportingComment(null)}
+        contentType="comment"
+        contentId={reportingComment || ""}
+      />
     </div>
   );
 };

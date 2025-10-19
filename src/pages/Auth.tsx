@@ -31,14 +31,14 @@ const emailSignupSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }).max(255, { message: "Email too long" }),
   password: passwordSchema,
   username: z.string().trim().min(1, { message: "Username is required" }).max(16, { message: "Username must be 16 characters or less" }).regex(/^[a-zA-Z0-9_.]+$/, { message: "Username can only contain letters, numbers, underscores, and periods" }),
-  displayName: z.string().trim().min(1, { message: "Display name is required" }).max(50, { message: "Display name too long" }),
+  displayName: z.string().trim().min(1, { message: "Display name is required" }).max(32, { message: "Display name must be 32 characters or less" }),
 });
 
 const phoneSignupSchema = z.object({
   phone: z.string().trim().min(10, { message: "Invalid phone number" }).max(20, { message: "Phone number too long" }),
   password: passwordSchema,
   username: z.string().trim().min(1, { message: "Username is required" }).max(16, { message: "Username must be 16 characters or less" }).regex(/^[a-zA-Z0-9_.]+$/, { message: "Username can only contain letters, numbers, underscores, and periods" }),
-  displayName: z.string().trim().min(1, { message: "Display name is required" }).max(50, { message: "Display name too long" }),
+  displayName: z.string().trim().min(1, { message: "Display name is required" }).max(32, { message: "Display name must be 32 characters or less" }),
 });
 
 const Auth = () => {
@@ -204,8 +204,12 @@ const Auth = () => {
                     placeholder="John Doe"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
+                    maxLength={32}
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Max 32 characters
+                  </p>
                 </div>
               </>
             )}

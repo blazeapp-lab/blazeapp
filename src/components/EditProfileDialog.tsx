@@ -10,7 +10,7 @@ import { Loader2, Upload } from "lucide-react";
 import { z } from "zod";
 
 const profileSchema = z.object({
-  displayName: z.string().trim().max(50, { message: "Display name too long" }).optional(),
+  displayName: z.string().trim().max(32, { message: "Display name must be 32 characters or less" }).optional(),
   bio: z.string().trim().max(500, { message: "Bio too long (max 500 characters)" }).optional(),
   website: z.string().trim().url({ message: "Invalid website URL" }).max(200, { message: "URL too long" }).optional().or(z.literal("")),
   location: z.string().trim().max(100, { message: "Location too long" }).optional(),
@@ -236,8 +236,10 @@ const EditProfileDialog = ({ open, onOpenChange, profile, onProfileUpdated }: Ed
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your display name"
+              maxLength={32}
               disabled={loading}
             />
+            <p className="text-xs text-muted-foreground">Max 32 characters</p>
           </div>
 
           <div className="space-y-2">
