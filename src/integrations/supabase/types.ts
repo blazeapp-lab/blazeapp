@@ -446,6 +446,7 @@ export type Database = {
           display_name: string | null
           id: string
           is_private: boolean
+          last_post_at: string | null
           location: string | null
           pinned_post_id: string | null
           updated_at: string
@@ -460,6 +461,7 @@ export type Database = {
           display_name?: string | null
           id: string
           is_private?: boolean
+          last_post_at?: string | null
           location?: string | null
           pinned_post_id?: string | null
           updated_at?: string
@@ -474,6 +476,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           is_private?: boolean
+          last_post_at?: string | null
           location?: string | null
           pinned_post_id?: string | null
           updated_at?: string
