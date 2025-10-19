@@ -89,13 +89,26 @@ const Auth = () => {
 
         // Check if user is suspended
         if (userId) {
-          const { data: isSuspended } = await supabase.rpc('is_user_suspended', {
-            _user_id: userId
-          });
+          const { data: suspensionData } = await supabase
+            .from('user_suspensions')
+            .select('reason, is_permanent, expires_at')
+            .eq('user_id', userId)
+            .maybeSingle();
 
-          if (isSuspended) {
+          if (suspensionData) {
             await supabase.auth.signOut();
-            throw new Error('Your account has been suspended. Please contact support.');
+            
+            if (suspensionData.is_permanent) {
+              throw new Error(`Your account has been permanently suspended.\n\nReason: ${suspensionData.reason || 'No reason provided'}\n\nPlease contact support if you believe this is a mistake.`);
+            } else if (suspensionData.expires_at) {
+              const expiryDate = new Date(suspensionData.expires_at);
+              const now = new Date();
+              
+              if (expiryDate > now) {
+                const daysLeft = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                throw new Error(`Your account is suspended until ${expiryDate.toLocaleDateString()}.\n\nReason: ${suspensionData.reason || 'No reason provided'}\n\nTime remaining: ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`);
+              }
+            }
           }
         }
 

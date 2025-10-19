@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -21,33 +20,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkSuspension = async (userId: string) => {
-      const { data, error } = await supabase.rpc('is_user_suspended', {
-        _user_id: userId
-      });
-
-      if (error) {
-        console.error('Error checking suspension:', error);
-        return false;
-      }
-
-      return data;
-    };
-
     // Set up listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (session?.user) {
-          const isSuspended = await checkSuspension(session.user.id);
-          if (isSuspended) {
-            await supabase.auth.signOut();
-            toast.error('Your account has been suspended. Please contact support.');
-            setSession(null);
-            setUser(null);
-            setLoading(false);
-            return;
-          }
-        }
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -55,18 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const isSuspended = await checkSuspension(session.user.id);
-        if (isSuspended) {
-          await supabase.auth.signOut();
-          toast.error('Your account has been suspended. Please contact support.');
-          setSession(null);
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-      }
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
