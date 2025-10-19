@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import blazeLogo from "@/assets/blaze-logo-new.png";
-import { useAdmin } from '@/hooks/useAdmin';
+import { useAdmin } from "@/hooks/useAdmin";
 
 interface HeaderProps {
   userId?: string;
@@ -46,7 +46,7 @@ const Header = ({ userId }: HeaderProps) => {
         },
         () => {
           fetchUnreadCount();
-        }
+        },
       )
       .subscribe();
 
@@ -65,13 +65,10 @@ const Header = ({ userId }: HeaderProps) => {
     <header className="w-full border-b border-border bg-card sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between gap-2">
-          <button
-            onClick={() => navigate("/")}
-            className="hover:opacity-80 transition-opacity"
-          >
+          <button onClick={() => navigate("/")} className="hover:opacity-80 transition-opacity">
             <img src={blazeLogo} alt="Blaze" className="h-10 w-10" />
           </button>
-          
+
           <nav className="flex items-center gap-0.5 sm:gap-1">
             {userId ? (
               <>
@@ -83,7 +80,7 @@ const Header = ({ userId }: HeaderProps) => {
                 >
                   <Home className="h-4 w-4" />
                 </Button>
-                
+
                 <Button
                   variant={location.pathname === "/search" ? "secondary" : "ghost"}
                   size="sm"
@@ -104,8 +101,10 @@ const Header = ({ userId }: HeaderProps) => {
                       <Shield className="h-4 w-4" />
                     </Button>
                   </>
+                ) : (
+                  <></>
                 )}
-                
+
                 <Button
                   variant={location.pathname === "/notifications" ? "secondary" : "ghost"}
                   size="sm"
@@ -114,15 +113,15 @@ const Header = ({ userId }: HeaderProps) => {
                 >
                   <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
-                    <Badge 
-                      variant="destructive" 
+                    <Badge
+                      variant="destructive"
                       className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 text-[10px] sm:text-xs"
                     >
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </Badge>
                   )}
                 </Button>
-                
+
                 <Button
                   variant={location.pathname === `/profile/${userId}` ? "secondary" : "ghost"}
                   size="sm"
@@ -131,7 +130,7 @@ const Header = ({ userId }: HeaderProps) => {
                 >
                   <User className="h-4 w-4" />
                 </Button>
-                
+
                 <Button
                   variant="default"
                   size="sm"
@@ -143,7 +142,7 @@ const Header = ({ userId }: HeaderProps) => {
                 >
                   <PenSquare className="h-4 w-4" />
                 </Button>
-                
+
                 <Button
                   variant="ghost"
                   size="sm"
@@ -163,7 +162,7 @@ const Header = ({ userId }: HeaderProps) => {
                 >
                   <SearchIcon className="h-4 w-4" />
                 </Button>
-                
+
                 <Button
                   variant="default"
                   size="sm"
