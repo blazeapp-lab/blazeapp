@@ -32,6 +32,10 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/reports" element={<AdminReports />} />
+              <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="/*" element={
                 <MainLayout>
                   <Routes>
@@ -41,10 +45,6 @@ const App = () => {
                     <Route path="/profile/:userId" element={<ProfileWrapper />} />
                     <Route path="/post/:postId" element={<PostDetailWrapper />} />
                     <Route path="/settings" element={<Settings />} />
-                    <Route path="/admin" element={<Admin />} />
-                    <Route path="/admin/users" element={<AdminUsers />} />
-                    <Route path="/admin/reports" element={<AdminReports />} />
-                    <Route path="/admin/settings" element={<AdminSettings />} />
                     <Route path="/terms" element={<TermsOfService />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="*" element={<NotFound />} />

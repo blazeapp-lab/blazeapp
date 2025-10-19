@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
-import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -61,32 +60,33 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data: authData } = await supabase.auth.admin.listUsers();
     
-    if (authData?.users) {
-      const userIds = authData.users.map(u => u.id);
-      
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, username, display_name')
-        .in('id', userIds);
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, username, display_name, created_at');
 
-      const { data: suspensions } = await supabase
-        .from('user_suspensions')
-        .select('user_id, reason, is_permanent')
-        .in('user_id', userIds);
-
-      const usersWithProfiles = authData.users.map(user => ({
-        id: user.id,
-        email: user.email || '',
-        created_at: user.created_at,
-        profiles: profiles?.find(p => p.id === user.id) || null,
-        user_suspensions: suspensions?.find(s => s.user_id === user.id) || null,
-      }));
-
-      setUsers(usersWithProfiles);
-      setFilteredUsers(usersWithProfiles);
+    if (!profiles) {
+      setLoading(false);
+      return;
     }
+
+    const userIds = profiles.map(p => p.id);
+    
+    const { data: suspensions } = await supabase
+      .from('user_suspensions')
+      .select('user_id, reason, is_permanent')
+      .in('user_id', userIds);
+
+    const usersWithProfiles = profiles.map(profile => ({
+      id: profile.id,
+      email: '',
+      created_at: profile.created_at,
+      profiles: { username: profile.username, display_name: profile.display_name },
+      user_suspensions: suspensions?.find(s => s.user_id === profile.id) || null,
+    }));
+
+    setUsers(usersWithProfiles);
+    setFilteredUsers(usersWithProfiles);
     setLoading(false);
   };
 
@@ -166,8 +166,7 @@ const AdminUsers = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container mx-auto px-4 pt-20 pb-8">
+      <main className="container mx-auto px-4 pt-8 pb-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
             <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>

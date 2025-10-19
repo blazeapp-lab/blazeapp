@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
-import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -46,10 +45,7 @@ const AdminReports = () => {
     setLoading(true);
     const { data } = await supabase
       .from('content_reports')
-      .select(`
-        *,
-        reporter:reporter_id(username:profiles!reporter_id(username))
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (data) {
@@ -117,8 +113,7 @@ const AdminReports = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container mx-auto px-4 pt-20 pb-8">
+      <main className="container mx-auto px-4 pt-8 pb-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
             <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
