@@ -10,10 +10,10 @@ import { Loader2, Upload } from "lucide-react";
 import { z } from "zod";
 
 const profileSchema = z.object({
-  displayName: z.string().trim().max(32, { message: "Display name must be 32 characters or less" }).optional(),
-  bio: z.string().trim().max(500, { message: "Bio too long (max 500 characters)" }).optional(),
-  website: z.string().trim().url({ message: "Invalid website URL" }).max(200, { message: "URL too long" }).optional().or(z.literal("")),
-  location: z.string().trim().max(100, { message: "Location too long" }).optional(),
+  displayName: z.string().trim().max(32, { message: "Display name must be 32 characters or less" }).optional().or(z.literal("")),
+  bio: z.string().trim().max(500, { message: "Bio must be 500 characters or less" }).optional().or(z.literal("")),
+  website: z.string().trim().url({ message: "Please enter a valid URL" }).max(255, { message: "Website URL is too long" }).optional().or(z.literal("")),
+  location: z.string().trim().max(100, { message: "Location must be 100 characters or less" }).optional().or(z.literal("")),
 });
 
 const validateImageFile = async (file: File): Promise<boolean> => {

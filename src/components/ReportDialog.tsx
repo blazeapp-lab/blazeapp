@@ -5,6 +5,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { z } from 'zod';
+
+const reportSchema = z.object({
+  reason: z.string()
+    .trim()
+    .min(10, { message: "Reason must be at least 10 characters" })
+    .max(1000, { message: "Reason must be 1000 characters or less" })
+});
 
 interface ReportDialogProps {
   open: boolean;
@@ -24,30 +32,33 @@ export const ReportDialog = ({ open, onOpenChange, contentType, contentId }: Rep
       return;
     }
 
-    if (!reason.trim()) {
-      toast.error('Please provide a reason for reporting');
-      return;
-    }
-
     setLoading(true);
 
-    const { error } = await supabase
-      .from('content_reports')
-      .insert({
-        reporter_id: user.id,
-        content_type: contentType,
-        content_id: contentId,
-        reason: reason.trim(),
-      });
+    try {
+      const validatedData = reportSchema.parse({ reason });
 
-    setLoading(false);
+      const { error } = await supabase
+        .from('content_reports')
+        .insert({
+          reporter_id: user.id,
+          content_type: contentType,
+          content_id: contentId,
+          reason: validatedData.reason,
+        });
 
-    if (error) {
-      toast.error('Failed to submit report');
-    } else {
+      if (error) throw error;
+
       toast.success('Report submitted successfully');
       setReason('');
       onOpenChange(false);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error('Failed to submit report');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
