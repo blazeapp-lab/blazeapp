@@ -17,21 +17,28 @@ export const useAdmin = () => {
         return;
       }
 
-      const { data: roles, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id);
+      try {
+        const [adminRes, modRes] = await Promise.all([
+          supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
+          supabase.rpc('has_role', { _user_id: user.id, _role: 'moderator' }),
+        ]);
 
-      if (error) {
-        console.error('Error fetching roles:', error);
-      }
+        if (adminRes.error) {
+          console.error('Error checking admin role:', adminRes.error);
+        }
+        if (modRes.error) {
+          console.error('Error checking moderator role:', modRes.error);
+        }
 
-      if (roles && roles.length > 0) {
-        setIsAdmin(roles.some(r => r.role === 'admin'));
-        setIsModerator(roles.some(r => r.role === 'moderator'));
+        setIsAdmin(!!adminRes.data);
+        setIsModerator(!!modRes.data);
+      } catch (e) {
+        console.error('Unexpected error checking roles:', e);
+        setIsAdmin(false);
+        setIsModerator(false);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     checkRole();
