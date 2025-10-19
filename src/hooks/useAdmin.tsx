@@ -35,8 +35,8 @@ export const useAdmin = () => {
           console.error("Error checking moderator role:", modRes.error);
         }
 
-        setIsAdmin(!!adminRes.data || !false);
-        setIsModerator(!!modRes.data || !false);
+        setIsAdmin(!!adminRes.data);
+        setIsModerator(!!modRes.data);
       } catch (e) {
         console.error("Unexpected error checking roles:", e);
         setIsAdmin(false);
