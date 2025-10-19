@@ -62,61 +62,9 @@ const EditProfileDialog = ({ open, onOpenChange, profile, onProfileUpdated }: Ed
   const [bio, setBio] = useState(profile.bio || "");
   const [website, setWebsite] = useState(profile.website || "");
   const [location, setLocation] = useState(profile.location || "");
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [bannerFile, setBannerFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(profile.avatar_url);
-  const [bannerPreview, setBannerPreview] = useState<string | null>(profile.banner_url);
+  // Profile images disabled for security
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 524288000) {
-        toast.error("Avatar image must be less than 500MB");
-        return;
-      }
-      const isValid = await validateImageFile(file);
-      if (!isValid) {
-        toast.error("Invalid image file. Please upload a valid JPEG, PNG, GIF, or WebP image.");
-        return;
-      }
-      setAvatarFile(file);
-      setAvatarPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 524288000) {
-        toast.error("Banner image must be less than 500MB");
-        return;
-      }
-      const isValid = await validateImageFile(file);
-      if (!isValid) {
-        toast.error("Invalid image file. Please upload a valid JPEG, PNG, GIF, or WebP image.");
-        return;
-      }
-      setBannerFile(file);
-      setBannerPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const uploadImage = async (file: File, type: 'avatar' | 'banner') => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${profile.id}/${type}-${Date.now()}.${fileExt}`;
-    
-    const { error: uploadError, data } = await supabase.storage
-      .from('profiles')
-      .upload(fileName, file, { upsert: true });
-
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('profiles')
-      .getPublicUrl(fileName);
-
-    return publicUrl;
-  };
+  // Profile image uploads disabled for security
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,17 +72,6 @@ const EditProfileDialog = ({ open, onOpenChange, profile, onProfileUpdated }: Ed
 
     try {
       const validatedData = profileSchema.parse({ displayName, bio, website, location });
-      
-      let avatarUrl = profile.avatar_url;
-      let bannerUrl = profile.banner_url;
-
-      if (avatarFile) {
-        avatarUrl = await uploadImage(avatarFile, 'avatar');
-      }
-
-      if (bannerFile) {
-        bannerUrl = await uploadImage(bannerFile, 'banner');
-      }
 
       const { error } = await supabase
         .from("profiles")
@@ -143,8 +80,6 @@ const EditProfileDialog = ({ open, onOpenChange, profile, onProfileUpdated }: Ed
           bio: validatedData.bio || null,
           website: validatedData.website || null,
           location: validatedData.location || null,
-          avatar_url: avatarUrl,
-          banner_url: bannerUrl,
         })
         .eq("id", profile.id);
 
@@ -171,64 +106,6 @@ const EditProfileDialog = ({ open, onOpenChange, profile, onProfileUpdated }: Ed
           <DialogTitle>Edit Profile</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Banner Upload */}
-          <div className="space-y-2">
-            <Label>Banner Image</Label>
-            <div className="relative">
-              <div
-                className="h-32 w-full rounded-lg bg-secondary border-2 border-dashed border-border overflow-hidden"
-                style={{
-                  backgroundImage: bannerPreview ? `url(${bannerPreview})` : undefined,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-              >
-                {!bannerPreview && (
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
-                    <Upload className="h-8 w-8" />
-                  </div>
-                )}
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleBannerChange}
-                className="absolute inset-0 opacity-0 cursor-pointer"
-                disabled={loading}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">Click to upload a banner image (max 5MB)</p>
-          </div>
-
-          {/* Avatar Upload */}
-          <div className="space-y-2">
-            <Label>Profile Picture</Label>
-            <div className="relative w-32 h-32 mx-auto">
-              <div
-                className="w-full h-full rounded-full bg-secondary border-2 border-dashed border-border overflow-hidden"
-                style={{
-                  backgroundImage: avatarPreview ? `url(${avatarPreview})` : undefined,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-              >
-                {!avatarPreview && (
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
-                    <Upload className="h-8 w-8" />
-                  </div>
-                )}
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-                className="absolute inset-0 opacity-0 cursor-pointer"
-                disabled={loading}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground text-center">Click to upload a profile picture (max 5MB)</p>
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="displayName">Display Name</Label>
             <Input
