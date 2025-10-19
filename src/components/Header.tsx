@@ -81,15 +81,6 @@ const Header = ({ userId }: HeaderProps) => {
                   <Home className="h-4 w-4" />
                 </Button>
 
-                <Button
-                  variant={location.pathname === "/search" ? "secondary" : "ghost"}
-                  size="sm"
-                  onClick={() => navigate("/search")}
-                  className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
-                >
-                  <SearchIcon className="h-4 w-4" />
-                </Button>
-
                 {isAdmin ? (
                   <>
                     <Button
@@ -104,6 +95,15 @@ const Header = ({ userId }: HeaderProps) => {
                 ) : (
                   <></>
                 )}
+
+                <Button
+                  variant={location.pathname === "/search" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => navigate("/search")}
+                  className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+                >
+                  <SearchIcon className="h-4 w-4" />
+                </Button>
 
                 <Button
                   variant={location.pathname === "/notifications" ? "secondary" : "ghost"}
