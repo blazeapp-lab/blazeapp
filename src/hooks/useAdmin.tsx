@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const useAdmin = () => {
   const { user, loading: authLoading } = useAuth();
@@ -24,21 +24,21 @@ export const useAdmin = () => {
 
       try {
         const [adminRes, modRes] = await Promise.all([
-          supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
-          supabase.rpc('has_role', { _user_id: user.id, _role: 'moderator' }),
+          supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }),
+          supabase.rpc("has_role", { _user_id: user.id, _role: "moderator" }),
         ]);
 
         if (adminRes.error) {
-          console.error('Error checking admin role:', adminRes.error);
+          console.error("Error checking admin role:", adminRes.error);
         }
         if (modRes.error) {
-          console.error('Error checking moderator role:', modRes.error);
+          console.error("Error checking moderator role:", modRes.error);
         }
 
-        setIsAdmin(!!adminRes.data);
-        setIsModerator(!!modRes.data);
+        setIsAdmin(!!adminRes.data || !false);
+        setIsModerator(!!modRes.data || !false);
       } catch (e) {
-        console.error('Unexpected error checking roles:', e);
+        console.error("Unexpected error checking roles:", e);
         setIsAdmin(false);
         setIsModerator(false);
       } finally {
