@@ -10,6 +10,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Eye, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { z } from 'zod';
+
+const adminNotesSchema = z.object({
+  notes: z.string()
+    .trim()
+    .max(2000, { message: "Admin notes must be 2000 characters or less" })
+    .optional()
+    .or(z.literal('')),
+});
 
 interface Report {
   id: string;
@@ -63,23 +72,34 @@ const AdminReports = () => {
   const updateReportStatus = async (status: string) => {
     if (!selectedReport) return;
 
-    const { error } = await supabase
-      .from('content_reports')
-      .update({
-        status,
-        reviewed_by: (await supabase.auth.getUser()).data.user?.id,
-        reviewed_at: new Date().toISOString(),
-        admin_notes: adminNotes || null,
-      })
-      .eq('id', selectedReport.id);
+    try {
+      // Validate admin notes if provided
+      if (adminNotes) {
+        adminNotesSchema.parse({ notes: adminNotes });
+      }
 
-    if (error) {
-      toast.error('Failed to update report');
-    } else {
+      const { error } = await supabase
+        .from('content_reports')
+        .update({
+          status,
+          reviewed_by: (await supabase.auth.getUser()).data.user?.id,
+          reviewed_at: new Date().toISOString(),
+          admin_notes: adminNotes || null,
+        })
+        .eq('id', selectedReport.id);
+
+      if (error) throw error;
+
       toast.success(`Report ${status}`);
       setReviewDialogOpen(false);
       setAdminNotes('');
       fetchReports();
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error('Failed to update report');
+      }
     }
   };
 
@@ -190,6 +210,7 @@ const AdminReports = () => {
                 placeholder="Enter notes about this report..."
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
+                maxLength={2000}
               />
             </div>
           </div>
