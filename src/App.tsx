@@ -3,33 +3,24 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
+import Search from "./pages/Search";
+import Settings from "./pages/Settings";
+import PostDetail from "./pages/PostDetail";
+import Notifications from "./pages/Notifications";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
+import AdminUsers from "./pages/AdminUsers";
+import AdminReports from "./pages/AdminReports";
+import AdminSettings from "./pages/AdminSettings";
 import Header from "@/components/Header";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
-// Lazy load all pages for code splitting
-const Index = lazy(() => import("./pages/Index"));
-const Auth = lazy(() => import("./pages/Auth"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Search = lazy(() => import("./pages/Search"));
-const Settings = lazy(() => import("./pages/Settings"));
-const PostDetail = lazy(() => import("./pages/PostDetail"));
-const Notifications = lazy(() => import("./pages/Notifications"));
-const TermsOfService = lazy(() => import("./pages/TermsOfService"));
-const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const Admin = lazy(() => import("./pages/Admin"));
-const AdminUsers = lazy(() => import("./pages/AdminUsers"));
-const AdminReports = lazy(() => import("./pages/AdminReports"));
-const AdminSettings = lazy(() => import("./pages/AdminSettings"));
-
 const queryClient = new QueryClient();
-
-const LoadingFallback = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-  </div>
-);
 
 const App = () => {
   return (
@@ -39,30 +30,28 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/admin/users" element={<AdminUsers />} />
-                <Route path="/admin/reports" element={<AdminReports />} />
-                <Route path="/admin/settings" element={<AdminSettings />} />
-                <Route path="/*" element={
-                  <MainLayout>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/search" element={<SearchWrapper />} />
-                      <Route path="/notifications" element={<Notifications />} />
-                      <Route path="/profile/:userId" element={<ProfileWrapper />} />
-                      <Route path="/post/:postId" element={<PostDetailWrapper />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/terms" element={<TermsOfService />} />
-                      <Route path="/privacy" element={<PrivacyPolicy />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </MainLayout>
-                } />
-              </Routes>
-            </Suspense>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/reports" element={<AdminReports />} />
+              <Route path="/admin/settings" element={<AdminSettings />} />
+              <Route path="/*" element={
+                <MainLayout>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/search" element={<SearchWrapper />} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/profile/:userId" element={<ProfileWrapper />} />
+                    <Route path="/post/:postId" element={<PostDetailWrapper />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/terms" element={<TermsOfService />} />
+                    <Route path="/privacy" element={<PrivacyPolicy />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </MainLayout>
+              } />
+            </Routes>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
