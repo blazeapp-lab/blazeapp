@@ -287,7 +287,12 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
 
     setIsEditing(true);
     try {
-      const { error } = await supabase.from("posts").update({ content: trimmedContent }).eq("id", post.id);
+      // CRITICAL: Only update content field - all other fields are protected by database triggers
+      const { error } = await supabase
+        .from("posts")
+        .update({ content: trimmedContent })
+        .eq("id", post.id)
+        .eq("user_id", currentUserId); // Extra security: verify ownership
 
       if (error) throw error;
 
@@ -297,6 +302,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
       sessionStorage.setItem("blaze:refresh-feed", "1");
       window.dispatchEvent(new Event("blaze:refresh-feed"));
     } catch (error: any) {
+      console.error("Edit error:", error);
       toast.error("Failed to update post");
     } finally {
       setIsEditing(false);

@@ -408,10 +408,12 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
 
     setIsEditing(true);
     try {
+      // CRITICAL: Only update content field - all other fields are protected by database triggers
       const { error } = await supabase
         .from("posts")
         .update({ content: trimmedContent })
-        .eq("id", postId);
+        .eq("id", postId)
+        .eq("user_id", currentUserId); // Extra security: verify ownership
 
       if (error) throw error;
 
@@ -421,6 +423,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
       sessionStorage.setItem("blaze:refresh-feed", "1");
       window.dispatchEvent(new Event("blaze:refresh-feed"));
     } catch (error: any) {
+      console.error("Edit error:", error);
       toast.error("Failed to update post");
     } finally {
       setIsEditing(false);
