@@ -24,7 +24,10 @@ interface UserWithProfile {
   user_suspensions: {
     reason: string;
     is_permanent: boolean;
+    expires_at: string | null;
+    suspended_at: string;
   } | null;
+  posts_count?: number;
 }
 
 const AdminUsers = () => {
@@ -84,8 +87,19 @@ const AdminUsers = () => {
     
     const { data: suspensions } = await supabase
       .from('user_suspensions')
-      .select('user_id, reason, is_permanent')
+      .select('user_id, reason, is_permanent, expires_at, suspended_at')
       .in('user_id', userIds);
+
+    // Get posts count for each user
+    const { data: postsCounts } = await supabase
+      .from('posts')
+      .select('user_id')
+      .in('user_id', userIds);
+
+    const postsCountMap = postsCounts?.reduce((acc, post) => {
+      acc[post.user_id] = (acc[post.user_id] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>) || {};
 
     const usersWithProfiles = profiles.map(profile => ({
       id: profile.id,
@@ -93,6 +107,7 @@ const AdminUsers = () => {
       created_at: profile.created_at,
       profiles: { username: profile.username, display_name: profile.display_name },
       user_suspensions: suspensions?.find(s => s.user_id === profile.id) || null,
+      posts_count: postsCountMap[profile.id] || 0,
     }));
 
     setUsers(usersWithProfiles);
@@ -238,8 +253,10 @@ const AdminUsers = () => {
                       />
                     </TableHead>
                     <TableHead>Username</TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead>Display Name</TableHead>
+                    <TableHead>Posts</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Suspension Details</TableHead>
                     <TableHead>Joined</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -256,12 +273,39 @@ const AdminUsers = () => {
                       <TableCell className="font-medium">
                         {user.profiles?.username || 'No username'}
                       </TableCell>
-                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        {user.profiles?.display_name || 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        {user.posts_count || 0}
+                      </TableCell>
                       <TableCell>
                         {user.user_suspensions ? (
-                          <span className="text-destructive">Suspended</span>
+                          <span className="text-destructive font-medium">Suspended</span>
                         ) : (
-                          <span className="text-green-600">Active</span>
+                          <span className="text-green-600 font-medium">Active</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="max-w-xs">
+                        {user.user_suspensions ? (
+                          <div className="text-sm space-y-1">
+                            <div className="font-medium">
+                              {user.user_suspensions.is_permanent ? 
+                                'Permanent' : 
+                                `Until ${new Date(user.user_suspensions.expires_at!).toLocaleDateString()}`
+                              }
+                            </div>
+                            {user.user_suspensions.reason && (
+                              <div className="text-muted-foreground truncate">
+                                {user.user_suspensions.reason}
+                              </div>
+                            )}
+                            <div className="text-muted-foreground text-xs">
+                              Since {new Date(user.user_suspensions.suspended_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
                       <TableCell>
