@@ -1,4 +1,4 @@
-import { Home, User, LogOut, PenSquare, Search as SearchIcon, Bell } from "lucide-react";
+import { Home, User, LogOut, PenSquare, Search as SearchIcon, Bell, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import blazeLogo from "@/assets/blaze-logo-new.png";
+import { useAdmin } from '@/hooks/useAdmin';
 
 interface HeaderProps {
   userId?: string;
@@ -15,6 +16,7 @@ const Header = ({ userId }: HeaderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
+  const { isAdmin } = useAdmin();
 
   useEffect(() => {
     if (!userId) return;
@@ -90,6 +92,19 @@ const Header = ({ userId }: HeaderProps) => {
                 >
                   <SearchIcon className="h-4 w-4" />
                 </Button>
+
+                {isAdmin ? (
+                  <>
+                    <Button
+                      variant={location.pathname === "/admin" ? "secondary" : "ghost"}
+                      size="sm"
+                      onClick={() => navigate("/admin")}
+                      className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+                    >
+                      <Shield className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
                 
                 <Button
                   variant={location.pathname === "/notifications" ? "secondary" : "ghost"}
