@@ -38,24 +38,11 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Use service role client for deletions
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    // Delete all related data first
-    await supabaseAdmin.from('broken_hearts').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    await supabaseAdmin.from('likes').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    await supabaseAdmin.from('reposts').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    await supabaseAdmin.from('post_views').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    await supabaseAdmin.from('comments').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    // Call the database function to delete all posts (faster, avoids timeouts)
+    const { error: rpcError } = await supabaseClient.rpc('admin_delete_all_posts')
     
-    // Finally delete all posts
-    const { error: deleteError } = await supabaseAdmin.from('posts').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    
-    if (deleteError) {
-      throw deleteError
+    if (rpcError) {
+      throw rpcError
     }
 
     return new Response(JSON.stringify({ success: true, message: 'All posts deleted' }), {
