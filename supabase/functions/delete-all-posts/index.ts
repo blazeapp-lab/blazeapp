@@ -38,8 +38,14 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Use service role client for the RPC call (needs elevated permissions)
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
     // Call the database function to delete all posts (faster, avoids timeouts)
-    const { error: rpcError } = await supabaseClient.rpc('admin_delete_all_posts')
+    const { error: rpcError } = await supabaseAdmin.rpc('admin_delete_all_posts')
     
     if (rpcError) {
       throw rpcError
