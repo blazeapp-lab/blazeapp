@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Save } from 'lucide-react';
+import { Save, Trash2 } from 'lucide-react';
 
 const AdminSettings = () => {
   const navigate = useNavigate();
@@ -81,6 +82,46 @@ const AdminSettings = () => {
     }
   };
 
+  const handleDeleteAllPosts = async () => {
+    if (!confirm('Are you sure you want to delete ALL posts? This action cannot be undone!')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("You must be logged in");
+        return;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-all-posts`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete posts');
+      }
+
+      toast.success("All posts deleted successfully");
+      window.location.reload();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (adminLoading || !isAdmin || loading) return null;
 
   return (
@@ -133,6 +174,33 @@ const AdminSettings = () => {
               <Save className="h-4 w-4 mr-2" />
               Save Settings
             </Button>
+
+            <Card className="border-destructive">
+              <CardHeader>
+                <CardTitle className="text-destructive">Danger Zone</CardTitle>
+                <CardDescription>
+                  Irreversible actions that affect all data
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="font-medium mb-1">Delete All Posts</div>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      Permanently delete all posts and related data (likes, comments, etc.)
+                    </div>
+                    <Button
+                      variant="destructive"
+                      onClick={handleDeleteAllPosts}
+                      disabled={loading}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete All Posts
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
