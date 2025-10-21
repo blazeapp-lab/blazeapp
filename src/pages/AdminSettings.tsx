@@ -17,6 +17,7 @@ const AdminSettings = () => {
   const [signupsEnabled, setSignupsEnabled] = useState(true);
   const [maxDailySignups, setMaxDailySignups] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [spamChecking, setSpamChecking] = useState(false);
 
   useEffect(() => {
     if (!adminLoading && !isAdmin) {
@@ -79,6 +80,51 @@ const AdminSettings = () => {
       toast.error('Failed to save settings');
     } else {
       toast.success('Settings saved successfully');
+    }
+  };
+
+  const handleBanSpammers = async () => {
+    if (!confirm('This will automatically ban users posting more than 5 times per minute. Continue?')) {
+      return;
+    }
+
+    try {
+      setSpamChecking(true);
+      const { data, error } = await supabase.functions.invoke('check-spam', {
+        body: { action: 'ban_spam_users', min_posts: 5 }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Banned ${data.banned_count} spam accounts`);
+      if (data.banned_count > 0) {
+        setTimeout(() => window.location.reload(), 1500);
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to ban spammers');
+    } finally {
+      setSpamChecking(false);
+    }
+  };
+
+  const handleCleanupOldData = async () => {
+    if (!confirm('This will delete old logs and data older than 30 days. Continue?')) {
+      return;
+    }
+
+    try {
+      setSpamChecking(true);
+      const { error } = await supabase.functions.invoke('check-spam', {
+        body: { action: 'cleanup_old_data' }
+      });
+
+      if (error) throw error;
+
+      toast.success('Old data cleaned up successfully');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to cleanup data');
+    } finally {
+      setSpamChecking(false);
     }
   };
 
@@ -174,6 +220,47 @@ const AdminSettings = () => {
               <Save className="h-4 w-4 mr-2" />
               Save Settings
             </Button>
+
+            <Card className="border-orange-500">
+              <CardHeader>
+                <CardTitle className="text-orange-600">Anti-Spam Controls</CardTitle>
+                <CardDescription>
+                  Protect your site from bot attacks and spam
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="font-medium mb-1">Ban Spam Accounts</div>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      Automatically ban users posting more than 5 times per minute
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={handleBanSpammers}
+                      disabled={spamChecking}
+                      className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                    >
+                      {spamChecking ? 'Checking...' : 'Ban Spammers'}
+                    </Button>
+                  </div>
+                  <Separator />
+                  <div>
+                    <div className="font-medium mb-1">Cleanup Old Data</div>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      Delete logs and views older than 30 days to free up space
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={handleCleanupOldData}
+                      disabled={spamChecking}
+                    >
+                      {spamChecking ? 'Cleaning...' : 'Cleanup Database'}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card className="border-destructive">
               <CardHeader>
