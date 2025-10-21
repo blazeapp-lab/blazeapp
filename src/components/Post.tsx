@@ -12,6 +12,7 @@ import { parseMentions } from "@/lib/mentionUtils";
 import { formatNumber } from "@/lib/utils";
 import { emitPostUpdate } from "@/lib/postEvents";
 import { ReportDialog } from "./ReportDialog";
+import { ErrorBoundary } from "./ErrorBoundary";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -459,7 +460,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
   };
 
   return (
-    <>
+    <ErrorBoundary>
       <Card className="p-4 space-y-3 hover:bg-secondary/50 transition-colors cursor-pointer" onClick={handlePostClick}>
         <div className="flex items-start gap-3">
           <Avatar className="cursor-pointer" onClick={() => navigate(`/profile/${post.profiles.id}`)}>
@@ -527,13 +528,31 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
                 </Button>
               )}
             </div>
-            <p className="mt-2 whitespace-pre-wrap break-words">{parseMentions(post.content)}</p>
-            {post.image_url && (
+            {post.content && (
+              <p className="mt-2 whitespace-pre-wrap break-words">{parseMentions(post.content)}</p>
+            )}
+            {post.image_url && typeof post.image_url === 'string' && post.image_url.trim() && (
               <>
                 {post.image_url.match(/\.(mp4|webm|mov|quicktime)$/i) ? (
-                  <video src={post.image_url} controls className="mt-3 rounded-lg max-h-96 w-full" />
+                  <video 
+                    src={post.image_url} 
+                    controls 
+                    className="mt-3 rounded-lg max-h-96 w-full"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      console.error('Failed to load video');
+                    }}
+                  />
                 ) : (
-                  <img src={post.image_url} alt="Post media" className="mt-3 rounded-lg max-h-96 w-full object-cover" />
+                  <img 
+                    src={post.image_url} 
+                    alt="Post media" 
+                    className="mt-3 rounded-lg max-h-96 w-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      console.error('Failed to load image');
+                    }}
+                  />
                 )}
               </>
             )}
@@ -637,7 +656,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
         contentType="post"
         contentId={post.id}
       />
-    </>
+    </ErrorBoundary>
   );
 };
 

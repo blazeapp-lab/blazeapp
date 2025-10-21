@@ -232,6 +232,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ip_bans: {
+        Row: {
+          banned_at: string | null
+          banned_by: string | null
+          expires_at: string | null
+          id: string
+          ip_address: string
+          is_permanent: boolean | null
+          reason: string | null
+        }
+        Insert: {
+          banned_at?: string | null
+          banned_by?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address: string
+          is_permanent?: boolean | null
+          reason?: string | null
+        }
+        Update: {
+          banned_at?: string | null
+          banned_by?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string
+          is_permanent?: boolean | null
+          reason?: string | null
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           created_at: string
@@ -445,7 +475,9 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_banned: boolean | null
           is_private: boolean
+          last_ip_address: string | null
           last_post_at: string | null
           location: string | null
           pinned_post_id: string | null
@@ -460,7 +492,9 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          is_banned?: boolean | null
           is_private?: boolean
+          last_ip_address?: string | null
           last_post_at?: string | null
           location?: string | null
           pinned_post_id?: string | null
@@ -475,7 +509,9 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_banned?: boolean | null
           is_private?: boolean
+          last_ip_address?: string | null
           last_post_at?: string | null
           location?: string | null
           pinned_post_id?: string | null
@@ -611,8 +647,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_ban_spam_users: {
+        Args: { min_posts_per_minute?: number }
+        Returns: {
+          banned_user_id: string
+          post_count: number
+        }[]
+      }
       admin_bulk_delete_users: {
         Args: { user_ids: string[] }
+        Returns: undefined
+      }
+      admin_delete_all_posts: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_old_data: {
+        Args: { days_to_keep?: number }
         Returns: undefined
       }
       create_notification: {
@@ -638,6 +689,10 @@ export type Database = {
       }
       is_blocked: {
         Args: { owner_id: string; viewer_id: string }
+        Returns: boolean
+      }
+      is_ip_banned: {
+        Args: { check_ip: string }
         Returns: boolean
       }
       is_user_suspended: {
