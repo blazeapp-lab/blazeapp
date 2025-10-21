@@ -19,6 +19,7 @@ import AdminReports from "./pages/AdminReports";
 import AdminSettings from "./pages/AdminSettings";
 import Header from "@/components/Header";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AdminRoute } from "@/components/AdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -32,10 +33,10 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/users" element={<AdminUsers />} />
-              <Route path="/admin/reports" element={<AdminReports />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
+              <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+              <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+              <Route path="/admin/reports" element={<AdminRoute requireModerator><AdminReports /></AdminRoute>} />
+              <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
               <Route path="/*" element={
                 <MainLayout>
                   <Routes>

@@ -31,8 +31,7 @@ interface UserWithProfile {
 }
 
 const AdminUsers = () => {
-  const navigate = useNavigate();
-  const { isAdmin, loading: adminLoading } = useAdmin();
+  const { isAdmin } = useAdmin();
   const [users, setUsers] = useState<UserWithProfile[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserWithProfile[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
@@ -43,12 +42,6 @@ const AdminUsers = () => {
   const [suspendReason, setSuspendReason] = useState('');
   const [suspendDuration, setSuspendDuration] = useState('permanent');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
-
-  useEffect(() => {
-    if (!adminLoading && !isAdmin) {
-      navigate('/');
-    }
-  }, [isAdmin, adminLoading, navigate]);
 
   useEffect(() => {
     fetchUsers();
@@ -187,7 +180,7 @@ const AdminUsers = () => {
     fetchUsers();
   };
 
-  if (adminLoading || !isAdmin) return null;
+  if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background">

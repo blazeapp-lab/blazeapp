@@ -12,18 +12,11 @@ import { toast } from 'sonner';
 import { Save, Trash2 } from 'lucide-react';
 
 const AdminSettings = () => {
-  const navigate = useNavigate();
-  const { isAdmin, loading: adminLoading } = useAdmin();
+  const { isAdmin } = useAdmin();
   const [signupsEnabled, setSignupsEnabled] = useState(true);
   const [maxDailySignups, setMaxDailySignups] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [spamChecking, setSpamChecking] = useState(false);
-
-  useEffect(() => {
-    if (!adminLoading && !isAdmin) {
-      navigate('/');
-    }
-  }, [isAdmin, adminLoading, navigate]);
 
   useEffect(() => {
     fetchSettings();
@@ -168,7 +161,7 @@ const AdminSettings = () => {
     }
   };
 
-  if (adminLoading || !isAdmin || loading) return null;
+  if (!isAdmin || loading) return null;
 
   return (
     <div className="min-h-screen bg-background">

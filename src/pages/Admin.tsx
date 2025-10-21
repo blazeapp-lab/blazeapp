@@ -1,31 +1,9 @@
-import { useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAdmin } from '@/hooks/useAdmin';
+import { Link } from 'react-router-dom';
 import AdminNav from '@/components/AdminNav';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Flag, Settings as SettingsIcon } from 'lucide-react';
 
 const Admin = () => {
-  const navigate = useNavigate();
-  const { isAdmin, loading } = useAdmin();
-
-  useEffect(() => {
-    if (!loading && !isAdmin) {
-      navigate('/');
-    }
-  }, [isAdmin, loading, navigate]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-background">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-background">

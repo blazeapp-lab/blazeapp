@@ -33,19 +33,12 @@ interface Report {
 }
 
 const AdminReports = () => {
-  const navigate = useNavigate();
-  const { isAdmin, isModerator, loading: adminLoading } = useAdmin();
+  const { isAdmin, isModerator } = useAdmin();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
-
-  useEffect(() => {
-    if (!adminLoading && !isAdmin && !isModerator) {
-      navigate('/');
-    }
-  }, [isAdmin, isModerator, adminLoading, navigate]);
 
   useEffect(() => {
     fetchReports();
@@ -130,7 +123,7 @@ const AdminReports = () => {
     }
   };
 
-  if (adminLoading || (!isAdmin && !isModerator)) return null;
+  if (!isAdmin && !isModerator) return null;
 
   return (
     <div className="min-h-screen bg-background">
