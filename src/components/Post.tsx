@@ -59,6 +59,18 @@ interface PostProps {
   onPin?: () => void;
 }
 
+// Helper function to proxy external URLs through our server
+const getProxiedUrl = (url: string): string => {
+  // If it's already a Supabase storage URL, return as-is
+  if (url.includes('supabase.co/storage')) {
+    return url;
+  }
+  
+  // Otherwise, proxy it through our edge function
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  return `https://${projectId}.supabase.co/functions/v1/proxy-image?url=${encodeURIComponent(url)}`;
+};
+
 const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPinned = false, onPin }: PostProps) => {
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
@@ -535,7 +547,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
               <>
                 {post.image_url.match(/\.(mp4|webm|mov|quicktime)$/i) ? (
                   <video 
-                    src={post.image_url} 
+                    src={getProxiedUrl(post.image_url)} 
                     controls 
                     className="mt-3 rounded-lg max-h-96 w-full"
                     onError={(e) => {
@@ -545,7 +557,7 @@ const Post = ({ post, currentUserId, onPostDeleted, showPinButton = false, isPin
                   />
                 ) : (
                   <img 
-                    src={post.image_url} 
+                    src={getProxiedUrl(post.image_url)} 
                     alt="Post media" 
                     className="mt-3 rounded-lg max-h-96 w-full object-cover"
                     onError={(e) => {

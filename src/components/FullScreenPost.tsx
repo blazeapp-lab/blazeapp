@@ -6,6 +6,18 @@ import { formatDistanceToNow } from "date-fns";
 import CommentSection from "./CommentSection";
 import { parseMentions } from "@/lib/mentionUtils";
 
+// Helper function to proxy external URLs through our server
+const getProxiedUrl = (url: string): string => {
+  // If it's already a Supabase storage URL, return as-is
+  if (url.includes('supabase.co/storage')) {
+    return url;
+  }
+  
+  // Otherwise, proxy it through our edge function
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  return `https://${projectId}.supabase.co/functions/v1/proxy-image?url=${encodeURIComponent(url)}`;
+};
+
 interface FullScreenPostProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -74,19 +86,27 @@ const FullScreenPost = ({
               <p className="mt-1.5 text-sm whitespace-pre-wrap break-words">
                 {parseMentions(post.content)}
               </p>
-              {post.image_url && (
+              {post.image_url && typeof post.image_url === 'string' && post.image_url.trim() && (
                 <>
                   {post.image_url.match(/\.(mp4|webm|mov|quicktime)$/i) ? (
                     <video
-                      src={post.image_url}
+                      src={getProxiedUrl(post.image_url)}
                       controls
                       className="mt-2 rounded-lg max-h-80 w-full"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        console.error('Failed to load video');
+                      }}
                     />
                   ) : (
                     <img
-                      src={post.image_url}
+                      src={getProxiedUrl(post.image_url)}
                       alt="Post media"
                       className="mt-2 rounded-lg max-h-80 w-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        console.error('Failed to load image');
+                      }}
                     />
                   )}
                 </>
