@@ -163,6 +163,25 @@ const AdminSettings = () => {
     }
   };
 
+  const handleDeleteAllNotifications = async () => {
+    if (!confirm('Are you sure you want to delete ALL notifications? This action cannot be undone!')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { error } = await supabase.rpc('admin_delete_all_notifications');
+      
+      if (error) throw error;
+
+      toast.success("All notifications deleted successfully");
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete notifications');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchStorageStats = async () => {
     setStorageLoading(true);
     try {
@@ -367,6 +386,21 @@ const AdminSettings = () => {
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete All Posts
+                    </Button>
+                  </div>
+                  <Separator />
+                  <div>
+                    <div className="font-medium mb-1">Delete All Notifications</div>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      Permanently delete all notifications from the system
+                    </div>
+                    <Button
+                      variant="destructive"
+                      onClick={handleDeleteAllNotifications}
+                      disabled={loading}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete All Notifications
                     </Button>
                   </div>
                 </div>

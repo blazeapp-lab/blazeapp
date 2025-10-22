@@ -658,6 +658,10 @@ export type Database = {
         Args: { user_ids: string[] }
         Returns: undefined
       }
+      admin_delete_all_notifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       admin_delete_all_posts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
