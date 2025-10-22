@@ -666,6 +666,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      admin_revoke_all_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       cleanup_old_data: {
         Args: { days_to_keep?: number }
         Returns: undefined

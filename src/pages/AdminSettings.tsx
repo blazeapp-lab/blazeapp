@@ -182,6 +182,26 @@ const AdminSettings = () => {
     }
   };
 
+  const handleSignOutAllUsers = async () => {
+    if (!confirm('Are you sure you want to sign out ALL users? This will revoke all active sessions immediately!')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.rpc('admin_revoke_all_sessions');
+      
+      if (error) throw error;
+
+      const result = data as { success: boolean; sessions_revoked: number };
+      toast.success(`Successfully signed out all users (${result.sessions_revoked} sessions revoked)`);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to sign out users');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchStorageStats = async () => {
     setStorageLoading(true);
     try {
@@ -401,6 +421,21 @@ const AdminSettings = () => {
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete All Notifications
+                    </Button>
+                  </div>
+                  <Separator />
+                  <div>
+                    <div className="font-medium mb-1">Sign Out All Users</div>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      Immediately revoke all active user sessions (everyone will be logged out)
+                    </div>
+                    <Button
+                      variant="destructive"
+                      onClick={handleSignOutAllUsers}
+                      disabled={loading}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Sign Out All Users
                     </Button>
                   </div>
                 </div>
