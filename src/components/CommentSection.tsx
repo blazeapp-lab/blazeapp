@@ -125,6 +125,8 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
+      } else if (error.message?.includes("commenting too fast")) {
+        toast.error(error.message);
       } else {
         toast.error("Failed to post comment");
       }
