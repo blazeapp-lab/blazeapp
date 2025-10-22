@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Save, Trash2 } from 'lucide-react';
+import { Save, Trash2, HardDrive, Loader2 } from 'lucide-react';
 
 const AdminSettings = () => {
   const { isAdmin } = useAdmin();
@@ -17,6 +17,8 @@ const AdminSettings = () => {
   const [maxDailySignups, setMaxDailySignups] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [spamChecking, setSpamChecking] = useState(false);
+  const [storageStats, setStorageStats] = useState<{ totalSize: number; fileCount: number } | null>(null);
+  const [storageLoading, setStorageLoading] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -161,6 +163,45 @@ const AdminSettings = () => {
     }
   };
 
+  const fetchStorageStats = async () => {
+    setStorageLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('storage-cleanup', {
+        body: { action: 'get_bucket_size', bucket: 'profiles' }
+      });
+
+      if (error) throw error;
+
+      setStorageStats(data);
+    } catch (error: any) {
+      toast.error('Failed to fetch storage stats: ' + error.message);
+    } finally {
+      setStorageLoading(false);
+    }
+  };
+
+  const handleCleanupOldStorage = async () => {
+    if (!confirm('This will delete all storage files older than 30 days. Continue?')) {
+      return;
+    }
+
+    try {
+      setStorageLoading(true);
+      const { data, error } = await supabase.functions.invoke('storage-cleanup', {
+        body: { action: 'delete_old_files', bucket: 'profiles' }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Deleted ${data.deletedCount} old files`);
+      fetchStorageStats();
+    } catch (error: any) {
+      toast.error('Failed to cleanup storage: ' + error.message);
+    } finally {
+      setStorageLoading(false);
+    }
+  };
+
   if (!isAdmin || loading) return null;
 
   return (
@@ -249,6 +290,56 @@ const AdminSettings = () => {
                       disabled={spamChecking}
                     >
                       {spamChecking ? 'Cleaning...' : 'Cleanup Database'}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-blue-500">
+              <CardHeader>
+                <CardTitle className="text-blue-600">Storage Management</CardTitle>
+                <CardDescription>
+                  Monitor and manage file storage usage
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="font-medium mb-1">Storage Statistics</div>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      View current storage usage and file count
+                    </div>
+                    {storageStats && (
+                      <div className="p-3 bg-secondary rounded-lg mb-3">
+                        <div className="text-sm">
+                          <div>Total Size: {(storageStats.totalSize / 1024 / 1024).toFixed(2)} MB</div>
+                          <div>File Count: {storageStats.fileCount}</div>
+                        </div>
+                      </div>
+                    )}
+                    <Button
+                      variant="outline"
+                      onClick={fetchStorageStats}
+                      disabled={storageLoading}
+                      className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                    >
+                      {storageLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <HardDrive className="h-4 w-4 mr-2" />}
+                      Check Storage
+                    </Button>
+                  </div>
+                  <Separator />
+                  <div>
+                    <div className="font-medium mb-1">Cleanup Old Files</div>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      Delete storage files older than 30 days to free up space
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={handleCleanupOldStorage}
+                      disabled={storageLoading}
+                    >
+                      {storageLoading ? 'Cleaning...' : 'Cleanup Storage'}
                     </Button>
                   </div>
                 </div>

@@ -91,7 +91,12 @@ const CreatePost = ({ userId, onPostCreated }: CreatePostProps) => {
       .from('profiles')
       .upload(fileName, file, { upsert: true });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      if (uploadError.message.includes('No space left')) {
+        throw new Error('Storage is full. Please contact support or try again later.');
+      }
+      throw uploadError;
+    }
 
     const { data: { publicUrl } } = supabase.storage
       .from('profiles')
