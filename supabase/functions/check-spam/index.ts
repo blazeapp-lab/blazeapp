@@ -20,14 +20,21 @@ Deno.serve(async (req) => {
       })
     }
 
-    const supabaseClient = createClient(
+    // Create client with user's auth for verification
+    const userClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       { global: { headers: { Authorization: authHeader } } }
     )
 
-    // Get the current user
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+    // Create admin client for executing admin operations
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // Get the current user using their auth
+    const { data: { user }, error: userError } = await userClient.auth.getUser()
     if (userError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -35,7 +42,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Check if user is admin
+    // Check if user is admin using admin client
     const { data: isAdmin, error: roleError } = await supabaseClient.rpc('has_role', {
       _user_id: user.id,
       _role: 'admin'

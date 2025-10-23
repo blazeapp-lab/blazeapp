@@ -29,13 +29,12 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
+    const { data: isAdmin, error: roleError } = await supabase.rpc('has_role', {
+      _user_id: user.id,
+      _role: 'admin'
+    });
 
-    if (!profile?.is_admin) {
+    if (roleError || !isAdmin) {
       throw new Error('Admin access required');
     }
 
