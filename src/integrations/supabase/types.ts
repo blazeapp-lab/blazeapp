@@ -658,22 +658,11 @@ export type Database = {
         Args: { user_ids: string[] }
         Returns: undefined
       }
-      admin_delete_all_notifications: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      admin_delete_all_posts: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      admin_revoke_all_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      cleanup_old_data: {
-        Args: { days_to_keep?: number }
-        Returns: undefined
-      }
+      admin_delete_all_follows: { Args: never; Returns: undefined }
+      admin_delete_all_notifications: { Args: never; Returns: undefined }
+      admin_delete_all_posts: { Args: never; Returns: undefined }
+      admin_revoke_all_sessions: { Args: never; Returns: Json }
+      cleanup_old_data: { Args: { days_to_keep?: number }; Returns: undefined }
       create_notification: {
         Args: {
           actor_id: string
@@ -684,10 +673,7 @@ export type Database = {
         }
         Returns: undefined
       }
-      delete_user_account: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      delete_user_account: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -699,14 +685,8 @@ export type Database = {
         Args: { owner_id: string; viewer_id: string }
         Returns: boolean
       }
-      is_ip_banned: {
-        Args: { check_ip: string }
-        Returns: boolean
-      }
-      is_user_suspended: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_ip_banned: { Args: { check_ip: string }; Returns: boolean }
+      is_user_suspended: { Args: { _user_id: string }; Returns: boolean }
       notify_tagged_users: {
         Args: { post_id_param: string; tagged_usernames: string[] }
         Returns: undefined

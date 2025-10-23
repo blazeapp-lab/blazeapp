@@ -202,6 +202,25 @@ const AdminSettings = () => {
     }
   };
 
+  const handleDeleteAllFollows = async () => {
+    if (!confirm('Are you sure you want to delete ALL follows? This action cannot be undone!')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { error } = await supabase.rpc('admin_delete_all_follows');
+      
+      if (error) throw error;
+
+      toast.success("All follows deleted successfully");
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete follows');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchStorageStats = async () => {
     setStorageLoading(true);
     try {
@@ -436,6 +455,21 @@ const AdminSettings = () => {
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Sign Out All Users
+                    </Button>
+                  </div>
+                  <Separator />
+                  <div>
+                    <div className="font-medium mb-1">Delete All Follows</div>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      Permanently delete all follow relationships between users
+                    </div>
+                    <Button
+                      variant="destructive"
+                      onClick={handleDeleteAllFollows}
+                      disabled={loading}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete All Follows
                     </Button>
                   </div>
                 </div>
