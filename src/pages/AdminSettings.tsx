@@ -19,9 +19,12 @@ const AdminSettings = () => {
   const [spamChecking, setSpamChecking] = useState(false);
   const [storageStats, setStorageStats] = useState<{ totalSize: number; fileCount: number } | null>(null);
   const [storageLoading, setStorageLoading] = useState(false);
+  const [blockedPhrases, setBlockedPhrases] = useState<Array<{ id: string; phrase: string }>>([]);
+  const [newPhrase, setNewPhrase] = useState('');
 
   useEffect(() => {
     fetchSettings();
+    fetchBlockedPhrases();
   }, []);
 
   const fetchSettings = async () => {
@@ -221,6 +224,57 @@ const AdminSettings = () => {
     }
   };
 
+  const fetchBlockedPhrases = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('blocked_phrases')
+        .select('id, phrase')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setBlockedPhrases(data || []);
+    } catch (error: any) {
+      console.error('Failed to fetch blocked phrases:', error);
+    }
+  };
+
+  const handleAddBlockedPhrase = async () => {
+    if (!newPhrase.trim()) {
+      toast.error('Please enter a phrase');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('blocked_phrases')
+        .insert({ phrase: newPhrase, created_by: (await supabase.auth.getUser()).data.user?.id });
+
+      if (error) throw error;
+
+      toast.success('Blocked phrase added');
+      setNewPhrase('');
+      fetchBlockedPhrases();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to add blocked phrase');
+    }
+  };
+
+  const handleDeleteBlockedPhrase = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('blocked_phrases')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Blocked phrase deleted');
+      fetchBlockedPhrases();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete blocked phrase');
+    }
+  };
+
   const fetchStorageStats = async () => {
     setStorageLoading(true);
     try {
@@ -322,6 +376,38 @@ const AdminSettings = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  <div>
+                    <div className="font-medium mb-1">Blocked Phrases</div>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      Prevent posts with exact text matches (including emojis)
+                    </div>
+                    <div className="flex gap-2 mb-3">
+                      <Input
+                        placeholder='e.g. "Loving the vibes here! ✌️"'
+                        value={newPhrase}
+                        onChange={(e) => setNewPhrase(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddBlockedPhrase()}
+                      />
+                      <Button onClick={handleAddBlockedPhrase}>Add</Button>
+                    </div>
+                    {blockedPhrases.length > 0 && (
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {blockedPhrases.map((item) => (
+                          <div key={item.id} className="flex items-center justify-between p-2 bg-secondary rounded">
+                            <span className="text-sm">{item.phrase}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteBlockedPhrase(item.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <Separator />
                   <div>
                     <div className="font-medium mb-1">Ban Spam Accounts</div>
                     <div className="text-sm text-muted-foreground mb-3">

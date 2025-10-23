@@ -38,6 +38,27 @@ export type Database = {
         }
         Relationships: []
       }
+      blocked_phrases: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          phrase: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          phrase: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          phrase?: string
+        }
+        Relationships: []
+      }
       blocks: {
         Row: {
           blocked_id: string
