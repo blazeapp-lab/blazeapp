@@ -2,10 +2,31 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Shield, Users, Flag, Settings, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
 
 const AdminNav = () => {
   const location = useLocation();
   const { user } = useAuth();
+  const [username, setUsername] = useState<string>('');
+
+  useEffect(() => {
+    const fetchUsername = async () => {
+      if (user?.id) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .single();
+        
+        if (data?.username) {
+          setUsername(data.username);
+        }
+      }
+    };
+
+    fetchUsername();
+  }, [user?.id]);
   
   const isActive = (path: string) => location.pathname === path;
   
@@ -66,7 +87,7 @@ const AdminNav = () => {
               </Button>
             </Link>
             <div className="text-sm text-muted-foreground">
-              {user?.email}
+              {username || user?.email}
             </div>
           </div>
         </div>
