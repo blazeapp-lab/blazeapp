@@ -38,6 +38,27 @@ export type Database = {
         }
         Relationships: []
       }
+      blocked_email_domains: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          domain: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          domain: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          domain?: string
+          id?: string
+        }
+        Relationships: []
+      }
       blocked_phrases: {
         Row: {
           created_at: string

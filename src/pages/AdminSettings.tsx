@@ -21,10 +21,13 @@ const AdminSettings = () => {
   const [storageLoading, setStorageLoading] = useState(false);
   const [blockedPhrases, setBlockedPhrases] = useState<Array<{ id: string; phrase: string }>>([]);
   const [newPhrase, setNewPhrase] = useState('');
+  const [blockedDomains, setBlockedDomains] = useState<Array<{ id: string; domain: string }>>([]);
+  const [newDomain, setNewDomain] = useState('');
 
   useEffect(() => {
     fetchSettings();
     fetchBlockedPhrases();
+    fetchBlockedDomains();
   }, []);
 
   const fetchSettings = async () => {
@@ -275,6 +278,57 @@ const AdminSettings = () => {
     }
   };
 
+  const fetchBlockedDomains = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('blocked_email_domains')
+        .select('id, domain')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setBlockedDomains(data || []);
+    } catch (error: any) {
+      console.error('Failed to fetch blocked domains:', error);
+    }
+  };
+
+  const handleAddBlockedDomain = async () => {
+    if (!newDomain.trim()) {
+      toast.error('Please enter a domain');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('blocked_email_domains')
+        .insert({ domain: newDomain.toLowerCase(), created_by: (await supabase.auth.getUser()).data.user?.id });
+
+      if (error) throw error;
+
+      toast.success('Email domain blocked');
+      setNewDomain('');
+      fetchBlockedDomains();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to block domain');
+    }
+  };
+
+  const handleDeleteBlockedDomain = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('blocked_email_domains')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Email domain unblocked');
+      fetchBlockedDomains();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to unblock domain');
+    }
+  };
+
   const fetchStorageStats = async () => {
     setStorageLoading(true);
     try {
@@ -379,7 +433,7 @@ const AdminSettings = () => {
                   <div>
                     <div className="font-medium mb-1">Blocked Phrases</div>
                     <div className="text-sm text-muted-foreground mb-3">
-                      Prevent posts with exact text matches (including emojis)
+                      Prevent posts and comments with exact text matches (including emojis)
                     </div>
                     <div className="flex gap-2 mb-3">
                       <Input
@@ -399,6 +453,38 @@ const AdminSettings = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteBlockedPhrase(item.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <Separator />
+                  <div>
+                    <div className="font-medium mb-1">Blocked Email Domains</div>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      Prevent signups from specific email domains
+                    </div>
+                    <div className="flex gap-2 mb-3">
+                      <Input
+                        placeholder='e.g. "yahoo.com" or "tempmail.com"'
+                        value={newDomain}
+                        onChange={(e) => setNewDomain(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddBlockedDomain()}
+                      />
+                      <Button onClick={handleAddBlockedDomain}>Block</Button>
+                    </div>
+                    {blockedDomains.length > 0 && (
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {blockedDomains.map((item) => (
+                          <div key={item.id} className="flex items-center justify-between p-2 bg-secondary rounded">
+                            <span className="text-sm font-mono">{item.domain}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteBlockedDomain(item.id)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
