@@ -88,6 +88,7 @@ const Auth = () => {
       }
       if (isLogin) {
         let userId: string | undefined;
+        let userEmail: string | undefined;
         if (authMethod === "email") {
           const validatedData = emailLoginSchema.parse({ email, password });
           const { data, error } = await supabase.auth.signInWithPassword({
@@ -96,6 +97,7 @@ const Auth = () => {
           });
           if (error) throw error;
           userId = data.user?.id;
+          userEmail = data.user?.email;
         } else {
           const validatedData = phoneLoginSchema.parse({ phone, password });
           const { data, error } = await supabase.auth.signInWithPassword({
@@ -104,6 +106,23 @@ const Auth = () => {
           });
           if (error) throw error;
           userId = data.user?.id;
+        }
+
+        // Check if email domain is blocked
+        if (userEmail) {
+          const emailDomain = userEmail.split('@')[1]?.toLowerCase();
+          if (emailDomain) {
+            const { data: blockedDomain } = await supabase
+              .from('blocked_email_domains')
+              .select('domain')
+              .ilike('domain', emailDomain)
+              .maybeSingle();
+
+            if (blockedDomain) {
+              await supabase.auth.signOut();
+              throw new Error('Sign-ins from this email domain are not allowed');
+            }
+          }
         }
 
         // Check if user is suspended
