@@ -248,16 +248,26 @@ const AdminSettings = () => {
     }
 
     try {
-      const { error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('You must be logged in');
+        return;
+      }
+
+      const { data, error } = await supabase
         .from('blocked_phrases')
-        .insert({ phrase: newPhrase, created_by: (await supabase.auth.getUser()).data.user?.id });
+        .insert({ phrase: newPhrase.trim(), created_by: user.id })
+        .select();
 
       if (error) throw error;
 
-      toast.success('Blocked phrase added');
-      setNewPhrase('');
-      fetchBlockedPhrases();
+      if (data && data.length > 0) {
+        setBlockedPhrases(prev => [data[0], ...prev]);
+        toast.success('Blocked phrase added');
+        setNewPhrase('');
+      }
     } catch (error: any) {
+      console.error('Error adding blocked phrase:', error);
       toast.error(error.message || 'Failed to add blocked phrase');
     }
   };
@@ -271,9 +281,10 @@ const AdminSettings = () => {
 
       if (error) throw error;
 
+      setBlockedPhrases(prev => prev.filter(item => item.id !== id));
       toast.success('Blocked phrase deleted');
-      fetchBlockedPhrases();
     } catch (error: any) {
+      console.error('Error deleting blocked phrase:', error);
       toast.error(error.message || 'Failed to delete blocked phrase');
     }
   };
@@ -299,16 +310,26 @@ const AdminSettings = () => {
     }
 
     try {
-      const { error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('You must be logged in');
+        return;
+      }
+
+      const { data, error } = await supabase
         .from('blocked_email_domains')
-        .insert({ domain: newDomain.toLowerCase(), created_by: (await supabase.auth.getUser()).data.user?.id });
+        .insert({ domain: newDomain.trim().toLowerCase(), created_by: user.id })
+        .select();
 
       if (error) throw error;
 
-      toast.success('Email domain blocked');
-      setNewDomain('');
-      fetchBlockedDomains();
+      if (data && data.length > 0) {
+        setBlockedDomains(prev => [data[0], ...prev]);
+        toast.success('Email domain blocked');
+        setNewDomain('');
+      }
     } catch (error: any) {
+      console.error('Error blocking domain:', error);
       toast.error(error.message || 'Failed to block domain');
     }
   };
@@ -322,9 +343,10 @@ const AdminSettings = () => {
 
       if (error) throw error;
 
+      setBlockedDomains(prev => prev.filter(item => item.id !== id));
       toast.success('Email domain unblocked');
-      fetchBlockedDomains();
     } catch (error: any) {
+      console.error('Error unblocking domain:', error);
       toast.error(error.message || 'Failed to unblock domain');
     }
   };
