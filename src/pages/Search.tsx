@@ -9,6 +9,7 @@ import { Search as SearchIcon, User, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Post from "@/components/Post";
 import { toast } from "sonner";
+import { mergePostUpdates } from "@/lib/postSync";
 
 interface SearchProps {
   currentUserId: string | undefined;
@@ -81,7 +82,7 @@ const Search = ({ currentUserId }: SearchProps) => {
         filteredPosts = filteredPosts.filter(post => !post.profiles.is_private);
       }
       
-      setPosts(filteredPosts);
+      setPosts(mergePostUpdates(filteredPosts));
     } catch (error: any) {
       toast.error("Failed to search");
     } finally {
@@ -140,7 +141,7 @@ const Search = ({ currentUserId }: SearchProps) => {
           filteredPosts = filteredPosts.filter(post => !post.profiles.is_private);
         }
         
-        setTrendingPosts(filteredPosts);
+        setTrendingPosts(mergePostUpdates(filteredPosts));
       } catch (error) {
         console.error("Failed to fetch trending posts:", error);
       }

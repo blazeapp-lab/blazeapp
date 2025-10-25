@@ -4,7 +4,7 @@ import Post from "@/components/Post";
 import CreatePost from "@/components/CreatePost";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { mergePostUpdates, clearPostUpdates } from "@/lib/postSync";
+import { mergePostUpdates } from "@/lib/postSync";
 interface HomeProps {
   currentUserId: string | undefined;
 }
@@ -168,7 +168,6 @@ const Home = ({ currentUserId }: HomeProps) => {
       // Apply any locally recorded updates (from interactions while away)
       const merged = mergePostUpdates(combinedPosts);
       setPosts(merged);
-      clearPostUpdates();
     } catch (error: any) {
       toast.error("Failed to load posts");
     } finally {
