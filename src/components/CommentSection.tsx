@@ -8,6 +8,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Loader2, User, Heart, Trash2, Edit, Flag } from "lucide-react";
 import { z } from "zod";
 import { emitPostUpdate } from "@/lib/postEvents";
+import { recordPostUpdate } from "@/lib/postSync";
 import { ReportDialog } from "./ReportDialog";
 
 const commentSchema = z.object({
@@ -120,6 +121,7 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
         .single();
       
       if (postData) {
+        recordPostUpdate(postId, { comments_count: postData.comments_count });
         emitPostUpdate({ postId, comments_count: postData.comments_count });
       }
     } catch (error: any) {
@@ -190,6 +192,7 @@ const CommentSection = ({ postId, currentUserId }: CommentSectionProps) => {
         .single();
       
       if (postData) {
+        recordPostUpdate(postId, { comments_count: postData.comments_count });
         emitPostUpdate({ postId, comments_count: postData.comments_count });
       }
     } catch (error: any) {

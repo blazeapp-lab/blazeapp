@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { formatNumber } from "@/lib/utils";
 import { parseMentions } from "@/lib/mentionUtils";
 import { emitPostUpdate } from "@/lib/postEvents";
+import { recordPostUpdate } from "@/lib/postSync";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -198,6 +199,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           
         if (error) throw error;
         
+        recordPostUpdate(postId!, { likes_count: newCount });
         emitPostUpdate({ postId: postId!, likes_count: newCount });
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
@@ -212,6 +214,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           setIsBrokenHearted(false);
           const newBhCount = Math.max(0, brokenHeartsCount - 1);
           setBrokenHeartsCount(newBhCount);
+          recordPostUpdate(postId!, { broken_hearts_count: newBhCount });
           emitPostUpdate({ postId: postId!, broken_hearts_count: newBhCount });
         }
         
@@ -227,6 +230,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
         
         if (error) throw error;
         
+        recordPostUpdate(postId!, { likes_count: newCount });
         emitPostUpdate({ postId: postId!, likes_count: newCount });
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
@@ -267,6 +271,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           
         if (error) throw error;
         
+        recordPostUpdate(postId!, { broken_hearts_count: newCount });
         emitPostUpdate({ postId: postId!, broken_hearts_count: newCount });
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
@@ -281,6 +286,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           setIsLiked(false);
           const newLikeCount = Math.max(0, likesCount - 1);
           setLikesCount(newLikeCount);
+          recordPostUpdate(postId!, { likes_count: newLikeCount });
           emitPostUpdate({ postId: postId!, likes_count: newLikeCount });
         }
         
@@ -296,6 +302,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
         
         if (error) throw error;
         
+        recordPostUpdate(postId!, { broken_hearts_count: newCount });
         emitPostUpdate({ postId: postId!, broken_hearts_count: newCount });
         sessionStorage.setItem("blaze:refresh-feed", "1");
         window.dispatchEvent(new Event("blaze:refresh-feed"));
@@ -336,6 +343,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
           
         if (error) throw error;
         
+        recordPostUpdate(postId!, { reposts_count: newCount });
         emitPostUpdate({ postId: postId!, reposts_count: newCount });
         toast.success("Repost removed");
         sessionStorage.setItem("blaze:refresh-feed", "1");
@@ -353,6 +361,7 @@ const PostDetail = ({ currentUserId }: PostDetailProps) => {
         
         if (error) throw error;
         
+        recordPostUpdate(postId!, { reposts_count: newCount });
         emitPostUpdate({ postId: postId!, reposts_count: newCount });
         toast.success("Reposted!");
         sessionStorage.setItem("blaze:refresh-feed", "1");
