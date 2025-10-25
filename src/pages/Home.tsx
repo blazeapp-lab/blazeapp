@@ -47,6 +47,32 @@ const Home = ({ currentUserId }: HomeProps) => {
       document.removeEventListener("visibilitychange", maybeRefresh as any);
     };
   }, [currentUserId]);
+
+  // Live-update feed counters when other views emit post updates
+  useEffect(() => {
+    const onPostUpdate = (e: Event) => {
+      const detail = (e as CustomEvent<any>).detail;
+      if (!detail || !detail.postId) return;
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === detail.postId
+            ? {
+                ...p,
+                likes_count: detail.likes_count ?? p.likes_count,
+                broken_hearts_count: detail.broken_hearts_count ?? p.broken_hearts_count,
+                reposts_count: detail.reposts_count ?? p.reposts_count,
+                comments_count: detail.comments_count ?? p.comments_count,
+              }
+            : p
+        )
+      );
+    };
+    window.addEventListener("blaze:update-post", onPostUpdate as EventListener);
+    return () => {
+      window.removeEventListener("blaze:update-post", onPostUpdate as EventListener);
+    };
+  }, []);
+
   const fetchPosts = async () => {
     try {
       if (!currentUserId) {
