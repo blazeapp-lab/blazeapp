@@ -1,17 +1,24 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAdmin } from '@/hooks/useAdmin';
-import { supabase } from '@/integrations/supabase/client';
-import AdminNav from '@/components/AdminNav';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
-import { Search, Ban, Trash2, UserCheck } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAdmin } from "@/hooks/useAdmin";
+import { supabase } from "@/integrations/supabase/client";
+import AdminNav from "@/components/AdminNav";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import { Search, Ban, Trash2, UserCheck } from "lucide-react";
 
 interface UserWithProfile {
   id: string;
@@ -35,71 +42,70 @@ const AdminUsers = () => {
   const [users, setUsers] = useState<UserWithProfile[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserWithProfile[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [suspendReason, setSuspendReason] = useState('');
-  const [suspendDuration, setSuspendDuration] = useState('permanent');
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
+  const [suspendReason, setSuspendReason] = useState("");
+  const [suspendDuration, setSuspendDuration] = useState("permanent");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
   useEffect(() => {
-    let filtered = users.filter(user => 
-      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.profiles?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.profiles?.display_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    let filtered = users.filter(
+      (user) =>
+        user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.profiles?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.profiles?.display_name?.toLowerCase().includes(searchQuery.toLowerCase()),
     );
-    
+
     // Sort by date
     filtered = filtered.sort((a, b) => {
       const dateA = new Date(a.created_at).getTime();
       const dateB = new Date(b.created_at).getTime();
-      return sortBy === 'newest' ? dateB - dateA : dateA - dateB;
+      return sortBy === "newest" ? dateB - dateA : dateA - dateB;
     });
-    
+
     setFilteredUsers(filtered);
   }, [searchQuery, users, sortBy]);
 
   const fetchUsers = async () => {
     setLoading(true);
-    
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, username, display_name, created_at');
+
+    const { data: profiles } = await supabase.from("profiles").select("id, username, display_name, created_at");
 
     if (!profiles) {
       setLoading(false);
       return;
     }
 
-    const userIds = profiles.map(p => p.id);
-    
+    const userIds = profiles.map((p) => p.id);
+
     const { data: suspensions } = await supabase
-      .from('user_suspensions')
-      .select('user_id, reason, is_permanent, expires_at, suspended_at')
-      .in('user_id', userIds);
+      .from("user_suspensions")
+      .select("user_id, reason, is_permanent, expires_at, suspended_at");
 
     // Get posts count for each user
-    const { data: postsCounts } = await supabase
-      .from('posts')
-      .select('user_id')
-      .in('user_id', userIds);
+    const { data: postsCounts } = await supabase.from("posts").select("user_id").in("user_id", userIds);
 
-    const postsCountMap = postsCounts?.reduce((acc, post) => {
-      acc[post.user_id] = (acc[post.user_id] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>) || {};
+    const postsCountMap =
+      postsCounts?.reduce(
+        (acc, post) => {
+          acc[post.user_id] = (acc[post.user_id] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ) || {};
 
-    const usersWithProfiles = profiles.map(profile => ({
+    const usersWithProfiles = profiles.map((profile) => ({
       id: profile.id,
-      email: '',
+      email: "",
       created_at: profile.created_at,
       profiles: { username: profile.username, display_name: profile.display_name },
-      user_suspensions: suspensions?.find(s => s.user_id === profile.id) || null,
+      user_suspensions: suspensions?.find((s) => s.user_id === profile.id) || null,
       posts_count: postsCountMap[profile.id] || 0,
     }));
 
@@ -122,31 +128,35 @@ const AdminUsers = () => {
     if (selectedUsers.size === filteredUsers.length) {
       setSelectedUsers(new Set());
     } else {
-      setSelectedUsers(new Set(filteredUsers.map(u => u.id)));
+      setSelectedUsers(new Set(filteredUsers.map((u) => u.id)));
     }
   };
 
   const handleSuspend = async () => {
     if (selectedUsers.size === 0) return;
 
-    const expiresAt = suspendDuration === 'permanent' ? null :
-      suspendDuration === '7days' ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() :
-      suspendDuration === '30days' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() :
-      new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt =
+      suspendDuration === "permanent"
+        ? null
+        : suspendDuration === "7days"
+          ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+          : suspendDuration === "30days"
+            ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
 
     for (const userId of Array.from(selectedUsers)) {
-      await supabase.from('user_suspensions').upsert({
+      await supabase.from("user_suspensions").upsert({
         user_id: userId,
         suspended_by: (await supabase.auth.getUser()).data.user?.id,
         reason: suspendReason,
-        is_permanent: suspendDuration === 'permanent',
+        is_permanent: suspendDuration === "permanent",
         expires_at: expiresAt,
       });
     }
 
     toast.success(`Suspended ${selectedUsers.size} user(s)`);
     setSuspendDialogOpen(false);
-    setSuspendReason('');
+    setSuspendReason("");
     setSelectedUsers(new Set());
     fetchUsers();
   };
@@ -154,12 +164,12 @@ const AdminUsers = () => {
   const handleDelete = async () => {
     if (selectedUsers.size === 0) return;
 
-    const { error } = await supabase.rpc('admin_bulk_delete_users', {
-      user_ids: Array.from(selectedUsers)
+    const { error } = await supabase.rpc("admin_bulk_delete_users", {
+      user_ids: Array.from(selectedUsers),
     });
 
     if (error) {
-      toast.error('Failed to delete users');
+      toast.error("Failed to delete users");
       console.error(error);
     } else {
       toast.success(`Deleted ${selectedUsers.size} user(s)`);
@@ -171,12 +181,9 @@ const AdminUsers = () => {
   };
 
   const handleUnsuspend = async (userId: string) => {
-    await supabase
-      .from('user_suspensions')
-      .delete()
-      .eq('user_id', userId);
+    await supabase.from("user_suspensions").delete().eq("user_id", userId);
 
-    toast.success('User unsuspended');
+    toast.success("User unsuspended");
     fetchUsers();
   };
 
@@ -192,16 +199,16 @@ const AdminUsers = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Sort by:</span>
               <Button
-                variant={sortBy === 'newest' ? 'default' : 'outline'}
+                variant={sortBy === "newest" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setSortBy('newest')}
+                onClick={() => setSortBy("newest")}
               >
                 Newest First
               </Button>
               <Button
-                variant={sortBy === 'oldest' ? 'default' : 'outline'}
+                variant={sortBy === "oldest" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setSortBy('oldest')}
+                onClick={() => setSortBy("oldest")}
               >
                 Oldest First
               </Button>
@@ -263,15 +270,9 @@ const AdminUsers = () => {
                           onCheckedChange={() => toggleUserSelection(user.id)}
                         />
                       </TableCell>
-                      <TableCell className="font-medium">
-                        {user.profiles?.username || 'No username'}
-                      </TableCell>
-                      <TableCell>
-                        {user.profiles?.display_name || 'N/A'}
-                      </TableCell>
-                      <TableCell>
-                        {user.posts_count || 0}
-                      </TableCell>
+                      <TableCell className="font-medium">{user.profiles?.username || "No username"}</TableCell>
+                      <TableCell>{user.profiles?.display_name || "N/A"}</TableCell>
+                      <TableCell>{user.posts_count || 0}</TableCell>
                       <TableCell>
                         {user.user_suspensions ? (
                           <span className="text-destructive font-medium">Suspended</span>
@@ -283,15 +284,12 @@ const AdminUsers = () => {
                         {user.user_suspensions ? (
                           <div className="text-sm space-y-1">
                             <div className="font-medium">
-                              {user.user_suspensions.is_permanent ? 
-                                'Permanent' : 
-                                `Until ${new Date(user.user_suspensions.expires_at!).toLocaleDateString()}`
-                              }
+                              {user.user_suspensions.is_permanent
+                                ? "Permanent"
+                                : `Until ${new Date(user.user_suspensions.expires_at!).toLocaleDateString()}`}
                             </div>
                             {user.user_suspensions.reason && (
-                              <div className="text-muted-foreground truncate">
-                                {user.user_suspensions.reason}
-                              </div>
+                              <div className="text-muted-foreground truncate">{user.user_suspensions.reason}</div>
                             )}
                             <div className="text-muted-foreground text-xs">
                               Since {new Date(user.user_suspensions.suspended_at).toLocaleDateString()}
@@ -301,16 +299,10 @@ const AdminUsers = () => {
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
-                      <TableCell>
-                        {new Date(user.created_at).toLocaleDateString()}
-                      </TableCell>
+                      <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
                         {user.user_suspensions ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleUnsuspend(user.id)}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => handleUnsuspend(user.id)}>
                             <UserCheck className="h-4 w-4 mr-2" />
                             Unsuspend
                           </Button>
@@ -329,9 +321,7 @@ const AdminUsers = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Suspend Users</DialogTitle>
-            <DialogDescription>
-              Suspend {selectedUsers.size} selected user(s)
-            </DialogDescription>
+            <DialogDescription>Suspend {selectedUsers.size} selected user(s)</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
