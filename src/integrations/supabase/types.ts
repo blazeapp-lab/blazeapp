@@ -728,6 +728,7 @@ export type Database = {
         Returns: boolean
       }
       is_ip_banned: { Args: { check_ip: string }; Returns: boolean }
+      is_user_blocked: { Args: { check_user_id: string }; Returns: boolean }
       is_user_suspended: { Args: { _user_id: string }; Returns: boolean }
       notify_tagged_users: {
         Args: { post_id_param: string; tagged_usernames: string[] }

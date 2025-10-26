@@ -70,7 +70,6 @@ const Auth = () => {
     
     // Honeypot check - if filled, it's a bot
     if (website || confirmEmail) {
-      console.log('Bot detected via honeypot');
       toast.error("Please try again");
       return;
     }
