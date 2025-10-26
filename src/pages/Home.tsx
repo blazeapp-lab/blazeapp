@@ -99,7 +99,8 @@ const Home = ({ currentUserId }: HomeProps) => {
 
         if (error) throw error;
         
-        setPosts(data || []);
+        const merged = mergePostUpdates(data || []);
+        setPosts(merged);
         return;
       }
 
