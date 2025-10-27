@@ -136,8 +136,8 @@ const AdminSettings = () => {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase.functions.invoke('delete-all-posts');
-
+      const { error } = await supabase.rpc('admin_delete_all_posts');
+      
       if (error) throw error;
 
       toast.success("All posts deleted successfully");
