@@ -734,6 +734,10 @@ export type Database = {
         Args: { post_id_param: string; tagged_usernames: string[] }
         Returns: undefined
       }
+      revoke_user_sessions: {
+        Args: { target_user_id: string }
+        Returns: undefined
+      }
       should_notify: {
         Args: { notification_type: string; recipient_id: string }
         Returns: boolean
