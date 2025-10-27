@@ -23,6 +23,33 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Basic auth check to prevent abuse:
+    // - Accept a valid Bearer JWT OR a valid project anon apikey header
+    const apiKey = req.headers.get('apikey') || req.headers.get('x-apikey')
+    const expectedAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    const authHeader = req.headers.get('authorization') || req.headers.get('Authorization')
+
+    let userId: string | null = null
+
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1]
+      const authClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      )
+      const { data, error } = await authClient.auth.getUser(token)
+      if (!error && data?.user) {
+        userId = data.user.id
+      }
+    }
+
+    if (!(apiKey && apiKey === expectedAnonKey) && !userId) {
+      return new Response(
+        JSON.stringify({ allowed: false, reason: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
