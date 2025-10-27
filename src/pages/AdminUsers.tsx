@@ -162,22 +162,37 @@ const AdminUsers = () => {
   };
 
   const handleDelete = async () => {
-    if (selectedUsers.size === 0) return;
-
-    const { error } = await supabase.rpc("admin_bulk_delete_users", {
-      user_ids: Array.from(selectedUsers),
-    });
-
-    if (error) {
-      toast.error("Failed to delete users");
-      console.error(error);
-    } else {
-      toast.success(`Deleted ${selectedUsers.size} user(s)`);
+    if (selectedUsers.size === 0) {
+      toast.error("No users selected");
+      return;
     }
 
-    setDeleteDialogOpen(false);
-    setSelectedUsers(new Set());
-    fetchUsers();
+    const userCount = selectedUsers.size;
+    
+    // Check if exceeds limit
+    if (userCount > 50) {
+      toast.error(`Cannot delete more than 50 users at once. You selected ${userCount} users.`);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc("admin_bulk_delete_users", {
+        user_ids: Array.from(selectedUsers),
+        confirm_deletion: true, // Explicit confirmation required
+      });
+
+      if (error) throw error;
+
+      const result = data as { deleted_count: number; deleted_user_ids: string[] } | null;
+      const deletedCount = result?.deleted_count || 0;
+      toast.success(`Successfully deleted ${deletedCount} user(s)`);
+      setSelectedUsers(new Set());
+      setDeleteDialogOpen(false);
+      fetchUsers();
+    } catch (error: any) {
+      console.error("Error deleting users:", error);
+      toast.error(error.message || "Failed to delete users");
+    }
   };
 
   const handleUnsuspend = async (userId: string) => {
@@ -362,13 +377,18 @@ const AdminUsers = () => {
             <DialogTitle>Delete Users</DialogTitle>
             <DialogDescription>
               Are you sure you want to permanently delete {selectedUsers.size} user(s)? This action cannot be undone.
+              {selectedUsers.size > 50 && (
+                <span className="block mt-2 text-destructive font-medium">
+                  Warning: Cannot delete more than 50 users at once. Please select fewer users.
+                </span>
+              )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button variant="destructive" onClick={handleDelete} disabled={selectedUsers.size > 50}>
               Delete
             </Button>
           </DialogFooter>

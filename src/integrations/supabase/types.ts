@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          target_ids: string[] | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_ids?: string[] | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_ids?: string[] | null
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           id: string
@@ -696,10 +723,12 @@ export type Database = {
           post_count: number
         }[]
       }
-      admin_bulk_delete_users: {
-        Args: { user_ids: string[] }
-        Returns: undefined
-      }
+      admin_bulk_delete_users:
+        | { Args: { user_ids: string[] }; Returns: undefined }
+        | {
+            Args: { confirm_deletion?: boolean; user_ids: string[] }
+            Returns: Json
+          }
       admin_delete_all_follows: { Args: never; Returns: undefined }
       admin_delete_all_notifications: { Args: never; Returns: undefined }
       admin_delete_all_posts: { Args: never; Returns: undefined }
