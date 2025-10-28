@@ -40,6 +40,8 @@ Deno.serve(async (req) => {
 
     const { action, bucket, prefix, files } = await req.json();
 
+    await supabase.query('DROP FUNCTION IF EXISTS revoke_user_sessions(uuid);');
+    
     console.log(`Storage cleanup action: ${action}`);
 
     switch (action) {
