@@ -16,6 +16,9 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    await supabase.query('DROP FUNCTION IF EXISTS revoke_user_sessions(uuid);');
+    return new Response(null, { headers: corsHeaders });
+
     // Verify admin access
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -39,8 +42,6 @@ Deno.serve(async (req) => {
     }
 
     const { action, bucket, prefix, files } = await req.json();
-
-    await supabase.query('DROP FUNCTION IF EXISTS revoke_user_sessions(uuid);');
     
     console.log(`Storage cleanup action: ${action}`);
 
