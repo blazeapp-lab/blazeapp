@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+    await supabaseClient.query('DROP FUNCTION IF EXISTS revoke_user_sessions(uuid);');
 
     const { endpoint } = await req.json()
     
