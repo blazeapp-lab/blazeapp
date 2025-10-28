@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+    console.log(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'));
 
     const { endpoint } = await req.json()
     
