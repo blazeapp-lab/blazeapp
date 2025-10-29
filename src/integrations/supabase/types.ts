@@ -723,12 +723,10 @@ export type Database = {
           post_count: number
         }[]
       }
-      admin_bulk_delete_users:
-        | { Args: { user_ids: string[] }; Returns: undefined }
-        | {
-            Args: { confirm_deletion?: boolean; user_ids: string[] }
-            Returns: Json
-          }
+      admin_bulk_delete_users: {
+        Args: { confirm_deletion?: boolean; user_ids: string[] }
+        Returns: Json
+      }
       admin_delete_all_follows: { Args: never; Returns: undefined }
       admin_delete_all_notifications: { Args: never; Returns: undefined }
       admin_delete_all_posts: { Args: never; Returns: undefined }
